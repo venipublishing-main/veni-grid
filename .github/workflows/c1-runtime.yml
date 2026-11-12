@@ -1,0 +1,47 @@
+name: C1 pinned runtime verification
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/c1-runtime.yml'
+permissions:
+  contents: read
+jobs:
+  verify-runtime:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - name: Download public pinned OR-Tools runtime wheels
+        run: |
+          mkdir -p runtime-wheels
+          python -m pip download --only-binary=:all: --dest runtime-wheels 'ortools==9.15.6755'
+          python -m pip install --no-index --find-links=runtime-wheels 'ortools==9.15.6755'
+      - name: Execute real CP-SAT runtime smoke test
+        run: |
+          python - <<'PY'
+          import hashlib, json, platform
+          from pathlib import Path
+          import ortools
+          from ortools.sat.python import cp_model
+          model = cp_model.CpModel()
+          x = model.new_bool_var('runtime_check')
+          model.add(x == 1)
+          solver = cp_model.CpSolver()
+          solver.parameters.num_search_workers = 1
+          status = solver.solve(model)
+          assert status in (cp_model.OPTIMAL, cp_model.FEASIBLE)
+          assert solver.value(x) == 1
+          files = {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in Path('runtime-wheels').glob('*.whl')}
+          data = {'purpose': 'Pinned dependency/runtime smoke test, NOT Veni Grid solver conformance', 'python': platform.python_version(), 'ortools': ortools.__version__, 'status': solver.status_name(status), 'wheel_sha256': files}
+          Path('runtime-wheels/runtime-verification.json').write_text(json.dumps(data, indent=2))
+          print(json.dumps(data, indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: c1-runtime-cp313-linux
+          path: runtime-wheels/
+          retention-days: 3
+          if-no-files-found: error
