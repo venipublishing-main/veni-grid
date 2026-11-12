@@ -1,0 +1,24 @@
+.venv/
+__pycache__/
+.pytest_cache/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.env
+.env.*
+workspace/
+private/
+*.pem
+*.key
+# Derived synthetic examples and schemas are recreated by prepare_workspace.
+/fixtures/
+/fixtures_v03/
+/fixtures_v04/
+/fixtures_rc/
+/fixtures_solver/
+/schemas/
+/conformance-profiles.json
+/ci-output/
+/evidence_solver/*
+!/evidence_solver/validator-regression-before.json

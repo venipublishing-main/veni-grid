@@ -1,0 +1,258 @@
+{
+  "case": "Nested subgroup unavailable, parent group attends",
+  "original_rc1_findings": [],
+  "expected": "RESOURCE_UNAVAILABLE",
+  "input": {
+    "schema_version": "1.0.0-rc1",
+    "problem_id": "schedule:test",
+    "model_version": 1,
+    "vertical_id": "SYNTHETIC",
+    "timezone": "Africa/Johannesburg",
+    "days": [
+      {
+        "id": "day:D1",
+        "label": "Day 1",
+        "ordinal": 1,
+        "date": null
+      },
+      {
+        "id": "day:D2",
+        "label": "Day 2",
+        "ordinal": 2,
+        "date": null
+      }
+    ],
+    "windows": [
+      {
+        "id": "win:D1P1",
+        "day_id": "day:D1",
+        "bell_id": "bell:main",
+        "sequence": 1,
+        "start_minute": 480,
+        "end_minute": 510,
+        "tags": []
+      },
+      {
+        "id": "win:D1P2",
+        "day_id": "day:D1",
+        "bell_id": "bell:main",
+        "sequence": 2,
+        "start_minute": 525,
+        "end_minute": 555,
+        "tags": []
+      },
+      {
+        "id": "win:D2P1",
+        "day_id": "day:D2",
+        "bell_id": "bell:main",
+        "sequence": 1,
+        "start_minute": 480,
+        "end_minute": 510,
+        "tags": []
+      },
+      {
+        "id": "win:D2P2",
+        "day_id": "day:D2",
+        "bell_id": "bell:main",
+        "sequence": 2,
+        "start_minute": 525,
+        "end_minute": 555,
+        "tags": []
+      }
+    ],
+    "resources": [
+      {
+        "id": "teacher:A",
+        "kind": "PERSON",
+        "label": "teacher:A",
+        "tags": [],
+        "member_ids": [],
+        "capacity": null,
+        "unavailable_window_ids": [],
+        "sharing_mode": "EXCLUSIVE",
+        "location_id": null,
+        "travel_profile": "STANDARD"
+      },
+      {
+        "id": "teacher:B",
+        "kind": "PERSON",
+        "label": "teacher:B",
+        "tags": [],
+        "member_ids": [],
+        "capacity": null,
+        "unavailable_window_ids": [],
+        "sharing_mode": "EXCLUSIVE",
+        "location_id": null,
+        "travel_profile": "STANDARD"
+      },
+      {
+        "id": "pupil:P0",
+        "kind": "PERSON",
+        "label": "pupil:P0",
+        "tags": [],
+        "member_ids": [],
+        "capacity": null,
+        "unavailable_window_ids": [],
+        "sharing_mode": "EXCLUSIVE",
+        "location_id": null,
+        "travel_profile": "STANDARD"
+      },
+      {
+        "id": "room:R0",
+        "kind": "SPACE",
+        "label": "Room 0",
+        "tags": [],
+        "member_ids": [],
+        "capacity": 30,
+        "unavailable_window_ids": [],
+        "sharing_mode": "EXCLUSIVE",
+        "location_id": null,
+        "travel_profile": "STANDARD"
+      },
+      {
+        "id": "room:R1",
+        "kind": "SPACE",
+        "label": "Room 1",
+        "tags": [],
+        "member_ids": [],
+        "capacity": 30,
+        "unavailable_window_ids": [],
+        "sharing_mode": "EXCLUSIVE",
+        "location_id": null,
+        "travel_profile": "STANDARD"
+      },
+      {
+        "id": "group:inner",
+        "kind": "GROUP",
+        "label": "inner",
+        "tags": [],
+        "member_ids": [
+          "pupil:P0"
+        ],
+        "capacity": null,
+        "unavailable_window_ids": [
+          "win:D1P1"
+        ],
+        "sharing_mode": "EXCLUSIVE",
+        "location_id": null,
+        "travel_profile": "STANDARD"
+      },
+      {
+        "id": "group:outer",
+        "kind": "GROUP",
+        "label": "outer",
+        "tags": [],
+        "member_ids": [
+          "group:inner"
+        ],
+        "capacity": null,
+        "unavailable_window_ids": [],
+        "sharing_mode": "EXCLUSIVE",
+        "location_id": null,
+        "travel_profile": "STANDARD"
+      }
+    ],
+    "activities": [
+      {
+        "id": "activity:A0",
+        "label": "Activity 0",
+        "demand": {
+          "basis": "GLOBAL",
+          "unit": "WINDOWS",
+          "amount": 1
+        },
+        "tags": []
+      }
+    ],
+    "events": [
+      {
+        "id": "event:E0",
+        "label": "Event 0",
+        "activity_id": "activity:A0",
+        "offering_id": null,
+        "required": true,
+        "fixed_participant_ids": [
+          "group:outer"
+        ],
+        "duration": {
+          "unit": "WINDOWS",
+          "count": 1,
+          "max_gap_minutes": 0
+        },
+        "placement": {
+          "start_window_ids": [
+            "win:D1P1"
+          ]
+        },
+        "requirements": [
+          {
+            "id": "req:T0",
+            "role": "TEACHER",
+            "kind": "PERSON",
+            "quantity": 1,
+            "eligible_resource_ids": [
+              "teacher:A"
+            ],
+            "minimum_capacity": null,
+            "usage_units": null
+          },
+          {
+            "id": "req:R0",
+            "role": "ROOM",
+            "kind": "SPACE",
+            "quantity": 1,
+            "eligible_resource_ids": [
+              "room:R0"
+            ],
+            "minimum_capacity": 1,
+            "usage_units": null
+          }
+        ]
+      }
+    ],
+    "offerings": [],
+    "participation_requests": [],
+    "constraints": [],
+    "objectives": [],
+    "locks": [],
+    "baseline_solution_id": null,
+    "solve_config": {
+      "mode": "FEASIBILITY",
+      "time_limit_seconds": 30,
+      "random_seed": 1,
+      "deterministic": true
+    },
+    "locations": [],
+    "credentials": [],
+    "travel_arcs": []
+  },
+  "candidate": {
+    "schema_version": "1.0.0-rc1",
+    "solution_id": "solution:regression",
+    "problem_id": "schedule:test",
+    "model_version": 1,
+    "status": "FEASIBLE",
+    "event_assignments": [
+      {
+        "event_id": "event:E0",
+        "start_window_id": "win:D1P1",
+        "resource_allocations": [
+          {
+            "requirement_id": "req:T0",
+            "resource_ids": [
+              "teacher:A"
+            ]
+          },
+          {
+            "requirement_id": "req:R0",
+            "resource_ids": [
+              "room:R0"
+            ]
+          }
+        ]
+      }
+    ],
+    "enrollment_assignments": [],
+    "validation": "UNVALIDATED"
+  }
+}
