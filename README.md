@@ -64,3 +64,21 @@ No new open-source licence has been selected in this import. Third-party depende
 ## Next engineering work
 
 Preserve the hard-feasibility baseline while adding independently recomputable quality scoring and realistic school-scale benchmarks. Repair remains a distinct, explicitly scoped operation. Segmented invigilation optimisation, automatic option/section construction, integrations, publication and the UI remain later work, not completed features.
+
+## Experimental Q1 quality measurement (review candidate)
+
+The additive `veni_grid_quality` package can independently score and compare
+hard-valid C1 candidates using an explicit, version-pinned tier-2/3/4 policy.
+It **does not** optimise or publish a timetable, and cannot outrank hard feasibility.
+Six transparent metrics are defined in [the quality contract](docs/Q1_QUALITY_CONTRACT.md).
+
+A 10-day synthetic Benchmark B has 240 lesson events, 120 invented learners,
+24 educators, 12 rooms and 40 hard rules. The original C1 solver can generate
+all 240 assignments, but the resulting *feasible* schedule is not always
+as convenient as a separate known-valid timetable under the Q1 test policy.
+Do not confuse this test dataset with a real 1,500-learner school-scale claim.
+
+Run the original 423-test suite with `python -m scripts.run_ci`; additionally run
+`python -m pytest -q quality_tests` and `python -m scripts.run_quality_probe`.
+An independent Q1 GitHub Actions workflow performs the latter checks on PRs.
+The C1 contract and solver source are unchanged by this addition.
