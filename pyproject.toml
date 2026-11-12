@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "veni-grid-c1"
+version = "0.1.0"
+description = "Veni Grid bounded C1 hard-feasibility runtime and independent contract validators"
+requires-python = ">=3.11"
+dependencies = ["pydantic>=2.10,<3", "jsonschema>=4.20"]
+
+[project.optional-dependencies]
+solver = ["ortools==9.15.6755"]
+test = ["pytest>=8"]
+
+[project.scripts]
+veni-grid-c1 = "veni_grid_solver.__main__:main"
+
+[tool.setuptools.packages.find]
+include = ["veni_grid_contract*", "veni_grid_solver*"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests", "tests_solver"]
