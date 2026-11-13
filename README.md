@@ -157,3 +157,22 @@ and `python -m scripts.run_c2_probes`. See
 [C2 benchmark gates](docs/BENCHMARK_C2_RESOURCE_GATES.md).
 Only invented data is used; no calendar, staffing records or other independent
 Grid timetable is loaded without explicit input. C1/Q1/Q2/Q3/O1 source is unchanged.
+
+## C3 resource-aware option-replanning preview (review)
+
+A **C3 experimental preview** can generate a new learner-valid subject-block
+layout after the fixed accepted O1 plan is proved impossible to teach by C2.
+It uses a restricted one-block-per-subject, one-occurrence, exclusive-room,
+qualified-teacher CP-SAT model and explicitly supplied candidate block times.
+A proposal is independently checked by O1 and real C2 timetable placement.
+**It does not change the accepted plan or publish anything.**
+
+The user-facing example displays an *actual independently validated* two-day
+C2 timetable as clear Subject / Class / Teacher / Room cards, with filters, and
+a separate C3 before/after preview explaining a one-laboratory conflict.
+Run `python -m scripts.run_c2_probes`,
+`python -m scripts.render_c2_for_people`, and
+`python -m scripts.run_c3_probes`. Open
+`readable/c2-teaching-timetable-explained.html` and
+`c3-output/c3-feedback-before-after.html`.
+Read [C3 exact boundaries](docs/C3_RESOURCE_FEEDBACK.md). No real school data.
