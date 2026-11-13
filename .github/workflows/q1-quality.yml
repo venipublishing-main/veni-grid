@@ -1,0 +1,36 @@
+name: Q1 quality policy and Benchmark B
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  q1-quality:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.13'
+      - name: Install reviewed C1 dependencies and additive Q1 package
+        run: python -m pip install -c requirements-solver-reviewed.txt -e ".[solver,test]"
+      - name: Check package environment
+        run: python -m pip check
+      - name: Q1 unit and benchmark B tests
+        run: python -m pytest quality_tests -q --junitxml=quality-output/q1-junit.xml
+      - name: Actual C1 B-scale generation and independent Q1 evaluation
+        run: python -m scripts.run_quality_probe
+      - name: Preserve Q1 execution receipts
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: q1-quality-${{ github.run_id }}
+          path: quality-output/
+          if-no-files-found: warn
+          retention-days: 7

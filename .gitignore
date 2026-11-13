@@ -22,3 +22,5 @@ private/
 /ci-output/
 /evidence_solver/*
 !/evidence_solver/validator-regression-before.json
+/quality-output/
+/fixtures_quality/
