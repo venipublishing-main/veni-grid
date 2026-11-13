@@ -56,7 +56,8 @@ jobs:
           assert c1['status']=='FEASIBLE' and c1['profile']=='FLEXIBLE_SECTIONS' and c1['independent_validation']=='PASSED'
           assert restricted['proof_scope']=='SINGLE_BLOCK_ONLY'
           assert impossible['status']=='INFEASIBLE' and impossible['proof_scope']=='FULL_O1'
-          assert report['staffing_and_rooms']=='NOT_MODELLED'
+          assert report['teacher_and_rooms']=='NOT_MODELLED'
+          assert report['academic_lesson_placement']=='NOT_MODELLED'
           print('O1 generated options validated; staff/rooms and lesson placement NOT modelled')
           PY
       - name: Preserve synthetic execution receipts
