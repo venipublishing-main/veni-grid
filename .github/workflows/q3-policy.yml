@@ -1,0 +1,55 @@
+name: Q3 break-aware policy and Benchmark C0
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  q3-policy:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Checkout without stored credentials
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Setup Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.13'
+      - name: Install reviewed Python dependencies
+        run: python -m pip install -c requirements-solver-reviewed.txt -e ".[solver,test]"
+      - name: Check compatibility and regenerate synthetic C1 fixtures
+        run: |
+          python -m pip check
+          python -m scripts.prepare_workspace
+      - name: Run all 485 C1/Q1/Q2/Q3 tests
+        run: |
+          mkdir -p q3-output
+          python -m pytest -q tests tests_solver quality_tests q2_tests q3_tests --junitxml=q3-output/pytest-results.xml
+      - name: Actual 240-event CP-SAT Q3 policy search
+        run: python -m scripts.run_q3_probe --seconds 20
+      - name: Generate demand-only Benchmark C0 (1500 learners)
+        run: python -m scripts.build_benchmark_c0
+      - name: Validate known C0 witness is NOT a solver performance claim
+        run: |
+          python - <<'PY'
+          from scripts.build_benchmark_c0 import build
+          from veni_grid_contract.option_design import option_errors
+          p,w=build()
+          assert len(p.participant_ids)==1500 and len(p.requests)==9000 and len(w.offerings)==450
+          assert option_errors(p,w)==[]
+          print('C0 contract representation validated; no sectioning solver executed')
+          PY
+      - name: Preserve Q3 execution evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: q3-quality-${{ github.run_id }}
+          path: |
+            q3-output/
+          if-no-files-found: warn
+          retention-days: 7
