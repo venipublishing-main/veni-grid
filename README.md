@@ -104,3 +104,11 @@ Run `python -m pytest q2_tests -q` and
 The [interactive UX Lab](ux_lab/grid-workbench.html) is standalone HTML using
 synthetic illustrative placements; it has no solver, persistence or access to
 real school data. See [UX Lab brief](docs/UX_LAB_01.md).
+
+## Q3: break-aware and part-time-aware quality (review)
+
+The optional **Q3 policy 0.2.0** adds explicit protected nonteaching intervals and per-person/day targeted workload penalties without changing the C1 input contract or historical Q1/Q2 definitions. It independently scores and can optimise the new metrics. See [Q3 policy](docs/Q3_QUALITY_POLICY.md).
+
+A **1,500-learner C0 synthetic dataset** exercises the subject-choice input and supplied-section validator (9,000 requests, 450 constructed section offerings); **no automatic option-block planning or school-scale solve is claimed**. See [Benchmark C0 scope](docs/BENCHMARK_C0_SCOPE.md).
+
+On a fresh checkout, run `python -m scripts.prepare_workspace`, then `python -m pytest -q tests tests_solver quality_tests q2_tests q3_tests`, `python -m scripts.run_q3_probe --seconds 20` and `python -m scripts.build_benchmark_c0`. Only synthetic data; no deployment or publication.
