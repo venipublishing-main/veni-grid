@@ -24,3 +24,4 @@ private/
 !/evidence_solver/validator-regression-before.json
 /quality-output/
 /fixtures_quality/
+/q2-output/

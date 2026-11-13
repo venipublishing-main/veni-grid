@@ -1,0 +1,47 @@
+name: Q2 quality optimisation and UX static review
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  q2-optimisation:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Checkout without credentials
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.13'
+      - name: Install reviewed solver dependencies
+        run: python -m pip install -c requirements-solver-reviewed.txt -e ".[solver,test]"
+      - name: Dependency compatibility
+        run: python -m pip check
+      - name: Prepare synthetic fixtures and JSON Schemas
+        run: python -m scripts.prepare_workspace
+      - name: Run 463 quality and feasibility regression tests
+        run: |
+          mkdir -p q2-output
+          python -m pytest -q tests tests_solver quality_tests q2_tests --junitxml=q2-output/pytest-results.xml
+      - name: Q2 real CP-SAT synthetic Benchmark B
+        run: python -m scripts.run_q2_probe --seconds 25
+      - name: Check UI laboratory script syntax
+        run: |
+          python -c "from pathlib import Path; p=Path('ux_lab/grid-workbench.html').read_text(); Path('/tmp/grid-ux-lab.js').write_text(p.split('<script>',1)[1].split('</script>',1)[0])"
+          node --check /tmp/grid-ux-lab.js
+        shell: bash
+      - name: Save Q2 evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: q2-quality-${{ github.run_id }}
+          path: q2-output/
+          if-no-files-found: warn
+          retention-days: 7
