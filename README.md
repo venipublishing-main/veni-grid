@@ -82,3 +82,25 @@ Run the original 423-test suite with `python -m scripts.run_ci`; additionally ru
 `python -m pytest -q quality_tests` and `python -m scripts.run_quality_probe`.
 An independent Q1 GitHub Actions workflow performs the latter checks on PRs.
 The C1 contract and solver source are unchanged by this addition.
+
+## Q2 lexicographic quality optimisation (review candidate)
+
+Q2 is a separate experimental CP-SAT service with an external Q1 QualityPolicy.
+It compiles the six existing Q1 penalty semantics and minimises tier 2, then tier 3,
+then tier 4. Only proved tier optima are locked; any returned incumbent is
+independently checked and rescored. A valid improvement is **not** labelled
+optimal unless all tiers have proofs. C1 feasibility is unchanged.
+
+The tested synthetic 240-event Benchmark B improved the general-quality penalty
+from 2,720 (known-valid reference) and 2,900 (C1 generated) to 2,380. The
+critical tier was proved optimal; the general tier was not proved optimal.
+These are deliberately configured test-policy values, not complete-school
+performance or marketing claims.
+
+Run `python -m pytest q2_tests -q` and
+`python -m scripts.run_q2_probe --seconds 25`. See
+[Q2 optimisation boundaries](docs/Q2_OPTIMISATION.md).
+
+The [interactive UX Lab](ux_lab/grid-workbench.html) is standalone HTML using
+synthetic illustrative placements; it has no solver, persistence or access to
+real school data. See [UX Lab brief](docs/UX_LAB_01.md).

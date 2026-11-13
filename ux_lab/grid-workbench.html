@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Veni Grid — Timetable Workbench (UI Laboratory)</title>
+<style>
+:root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;color:#12253c;background:#f3f6fa;--dark:#10243b;--line:#dee5ef;--muted:#65758a;--accent:#007e7f;--surface:#fff;--h:76px;--w:170px}*{box-sizing:border-box}button,input,select{font:inherit}button{cursor:pointer}button:disabled{cursor:not-allowed;opacity:.48}body{margin:0}button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid #5dc5bc;outline-offset:2px}.shell{display:grid;grid-template-columns:216px minmax(0,1fr);min-height:100vh}.nav{background:#11253a;color:#eaf1f7;display:flex;flex-direction:column;padding:22px 14px;gap:24px}.wordmark{display:flex;gap:10px;align-items:center;padding:0 10px}.logo{display:grid;place-items:center;font-size:21px;color:#152f44;font-weight:900;width:40px;height:40px;background:#8ddacb;border-radius:12px}.brand{line-height:1.1;font-size:14px;font-weight:800;letter-spacing:.18em}.brand span{display:block;font-weight:500;font-size:10px;letter-spacing:.12em;color:#95afc5;margin-top:5px}.workspace{border:1px solid #405267;border-radius:12px;padding:12px;color:#d7e6f4;font-size:12px}.workspace b{display:block;font-size:13px;color:#fff;margin-top:5px}.navblock h2{font-size:10px;color:#8faac0;letter-spacing:.13em;text-transform:uppercase;font-weight:700;margin:0 11px 10px}.navitem{width:100%;display:flex;align-items:center;gap:10px;border:0;background:transparent;color:#c1d3e3;padding:12px;border-radius:10px;text-align:left;font-size:13px}.navitem span{font-size:16px}.navitem.selected{background:#244e57;color:white;font-weight:700}.navitem:hover{background:#233c52}.navfoot{font-size:11px;color:#96adbd;margin-top:auto;padding:0 10px;line-height:1.6}.main{min-width:0}.top{background:#fff;box-shadow:0 1px 1px #d5dce7;border-bottom:1px solid var(--line);padding:18px 28px;display:flex;justify-content:space-between;align-items:center;gap:18px}.eyebrow{letter-spacing:.1em;text-transform:uppercase;color:var(--accent);font-size:10px;font-weight:800}.top h1{font-size:23px;margin:3px 0 5px;letter-spacing:-.04em}.sub{color:var(--muted);font-size:12px}.topactions{display:flex;align-items:center;gap:10px}.btn{border:1px solid #d1dce7;background:#fff;border-radius:9px;padding:10px 14px;color:#1b344a;font-weight:700;font-size:12px;white-space:nowrap}.btn:hover:not(:disabled){background:#eaf4f3}.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}.demo{display:flex;gap:9px;align-items:center;background:#eff9f8;color:#24645f;border-bottom:1px solid #d2eee8;padding:10px 27px;font-size:12px}.demo strong{color:#00796d}.content{padding:21px 24px 30px;display:grid;grid-template-columns:minmax(0,1fr) 285px;gap:19px}.workarea{min-width:0}.sectionheading{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:0 0 12px}.sectionheading h2{font-size:14px;margin:0}.metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:15px}.metric{background:white;border:1px solid var(--line);border-radius:14px;padding:14px 15px;min-height:95px;box-shadow:0 2px 8px #1d355006}.metric small{color:var(--muted);font-size:11px}.metric strong{display:block;font-size:24px;margin-top:7px;letter-spacing:-.05em}.metric b{font-size:10px;color:#247966}.metric .under{font-size:10px;color:var(--muted)}.pane{background:#fff;border:1px solid var(--line);border-radius:15px;overflow:hidden;box-shadow:0 3px 12px #1d355006}.tools{padding:14px;display:flex;flex-wrap:wrap;gap:10px;align-items:end;border-bottom:1px solid var(--line)}.field{display:flex;flex-direction:column;gap:5px}.field label{font-size:10px;color:var(--muted);font-weight:800;letter-spacing:.04em;text-transform:uppercase}.field select,.field input{border:1px solid #d4dde9;padding:8px 9px;background:#fff;border-radius:9px;font-size:12px;min-height:36px;color:#1d3146}.field.search{flex:1;min-width:145px}.segments{display:flex;background:#edf1f6;border-radius:8px;padding:3px;gap:2px}.segments button{border:none;background:transparent;border-radius:6px;padding:8px 10px;color:#53677e;font-size:11px;white-space:nowrap}.segments button.active{background:#fff;box-shadow:0 1px 4px #1232;font-weight:800;color:#176f6a}.pane-note{background:#f8fbfd;border-bottom:1px solid #e4e9f1;padding:10px 14px;display:flex;justify-content:space-between;gap:9px;color:#607087;font-size:11px}.pane-note strong{color:#1a756f}.timetable{overflow:auto;max-height:720px;overscroll-behavior:contain}.table-grid{display:grid;width:max-content;grid-template-columns:64px repeat(var(--days),var(--w));grid-auto-rows:minmax(var(--h),auto)}.corner,.dayhead,.period{position:sticky;z-index:2;background:#f4f7fa;border-right:1px solid var(--line);border-bottom:1px solid var(--line);font-size:11px}.corner{top:0;left:0;z-index:5}.dayhead{top:0;display:flex;align-items:center;justify-content:space-between;padding:0 12px;font-weight:800;z-index:3}.dayhead small{font-size:10px;color:var(--muted);font-weight:400}.period{left:0;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:800;z-index:4}.period small{color:#7e91a7;font-weight:400;margin-top:4px}.cell{border:0;border-right:1px solid #edf1f6;border-bottom:1px solid #edf1f6;background:#fff;padding:8px;text-align:left;min-width:0}.cell:hover{background:#f1f8f8}.lesson{border-radius:8px;height:100%;min-height:51px;display:flex;flex-direction:column;gap:2px;padding:10px;border-left:3px solid;position:relative}.lesson strong{font-size:12px}.lesson small{font-size:10px;opacity:.8}.lesson .teacher{display:flex;justify-content:space-between;gap:5px}.lesson.math{background:#eaf2fc;border-color:#6391ce;color:#315c94}.lesson.eng{background:#f2edfb;border-color:#967cd6;color:#674c9b}.lesson.sci{background:#e5f6f1;border-color:#4aad8b;color:#2d7a66}.lesson.hist{background:#fff3e5;border-color:#e4a45e;color:#93602d}.lesson.life{background:#f7eff1;border-color:#d7949d;color:#905861}.cell.current .lesson{outline:2px solid #078888;outline-offset:-2px}.cell.dim .lesson{opacity:.25}.cell.changed .lesson:after{content:'●';position:absolute;right:6px;top:3px;color:#dc8652;font-size:11px}.empty{color:#b2bcc9;text-align:center;padding:16px 0;font-size:13px}.side{display:flex;flex-direction:column;gap:12px;min-width:0}.side .pane{padding:17px}.side h2{margin:0 0 8px;font-size:13px}.side h3{font-size:12px;margin:0 0 8px}.helptext{font-size:11px;line-height:1.6;color:var(--muted);margin:0}.tag{display:inline-flex;padding:5px 9px;background:#eaf7f3;color:#247c6e;font-size:10px;border-radius:16px;font-weight:700}.data-row{padding:10px 0;border-bottom:1px solid #edf0f4;display:flex;justify-content:space-between;font-size:11px;gap:10px}.data-row:last-child{border:0}.data-row span{color:var(--muted)}.data-row b{text-align:right;font-size:11px}.mini-pill{display:inline-flex;align-items:center;border-radius:6px;padding:4px 6px;background:#eaf7f3;color:#267768;font-size:10px;font-weight:700}.side-actions{display:flex;gap:7px;margin-top:13px;flex-wrap:wrap}.side-actions button{font-size:11px;padding:8px}.scorebars{margin-top:10px;display:flex;flex-direction:column;gap:9px}.barlabel{display:flex;justify-content:space-between;font-size:10px;color:#607086}.barbg{background:#ecf1f6;height:8px;border-radius:10px;overflow:hidden;margin-top:5px}.barbg i{display:block;background:#78a3b2;height:100%;border-radius:10px}.barbg i.better{background:#1b938b}.status-note{font-size:11px;min-height:15px;color:#006d68;margin-top:10px}.footer{color:#7b8a9d;font-size:11px;padding:10px 24px 24px}.focus{display:grid;grid-template-columns:1fr 1fr;gap:10px}.focus-card{border:1px solid #e0e6ee;border-radius:9px;padding:10px;font-size:11px}.focus-card strong{display:block;font-size:14px;margin-top:5px}.dialog{border:1px solid #d2dde8;border-radius:17px;box-shadow:0 24px 90px #10243b33;max-width:420px;width:92%;padding:25px}.dialog::backdrop{background:#0f233b88}.dialog h2{font-size:19px}.dialog p{font-size:12px;line-height:1.6;color:#65758a}.dialog .field{margin:12px 0}.dialog select,.dialog input{width:100%}.dialog-menu{display:flex;gap:10px;justify-content:flex-end;margin-top:18px}@media(max-width:1100px){.content{grid-template-columns:minmax(0,1fr)}.side{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:760px){.shell{grid-template-columns:1fr}.nav{padding:12px;gap:10px}.wordmark{display:none}.workspace,.navfoot,.navblock h2{display:none}.navblock{display:flex;gap:5px;overflow:auto}.navitem{white-space:nowrap;width:auto;padding:8px}.top{padding:15px;flex-direction:column;align-items:flex-start}.topactions{width:100%;justify-content:space-between}.top h1{font-size:19px}.content{padding:13px}.metrics{gap:6px}.metric{padding:10px;min-height:85px}.metric strong{font-size:20px}.side{display:flex}.demo{padding:11px 14px}.table-grid{--w:150px}.footer{padding:10px 15px}}
+</style>
+</head>
+<body>
+<div class="shell">
+ <nav class="nav" aria-label="Grid modules">
+   <div class="wordmark"><div class="logo">▦</div><div class="brand">VENI GRID<span>VENI FLOW / SCHEDULING</span></div></div>
+   <div class="workspace">DEMO WORKSPACE<b>Northfield School · Synthetic</b></div>
+   <div class="navblock"><h2>Timetable modules</h2>
+    <button class="navitem selected" data-module="Schools" aria-current="page"><span>▦</span> Schools</button>
+    <button class="navitem" data-module="Examinations"><span>▤</span> Exams</button>
+    <button class="navitem" data-module="Invigilation"><span>♙</span> Invigilation</button>
+    <button class="navitem" data-module="Duties"><span>✓</span> Duties</button>
+    <button class="navitem" data-module="Sport"><span>◇</span> Sport</button>
+   </div>
+   <div class="navfoot">One shared engine. Independent schedules when you need them.<br><br>UX Lab 01 · No live school records</div>
+ </nav>
+ <main class="main">
+   <header class="top"><div><div class="eyebrow">Scheduling / Workbench</div><h1 id="pageTitle">Academic master timetable</h1><div class="sub">Cycle 2027 · Draft candidate · Ten-day rotation</div></div><div class="topactions"><button id="newJob" class="btn primary">＋ New timetable</button><button id="helpButton" class="btn">How this works</button></div></header>
+   <div class="demo"><strong>● UI LABORATORY</strong><span>This is an interactive design prototype with invented data. It does not run the solver, save changes or publish schedules.</span></div>
+   <section class="content"><div class="workarea">
+     <div class="sectionheading"><h2>Current timetable overview</h2><span class="mini-pill" id="modeCaption">Baseline · feasibility candidate</span></div>
+     <div class="metrics"><div class="metric"><small>Hard-rule conflicts</small><strong>0</strong><div class="under">Reference benchmark result</div></div><div class="metric"><small>General quality penalty</small><strong id="qualityNumber">2,900</strong><div class="under" id="qualityHelp">Baseline Q1 measurement</div></div><div class="metric"><small>Scheduled lesson events</small><strong>240</strong><div class="under">Benchmark B · synthetic</div></div></div>
+     <div class="pane"><div class="tools">
+       <div class="field"><label for="perspective">Perspective</label><select id="perspective"><option value="Class">Class</option><option value="Teacher">Teacher</option><option value="Room">Room</option></select></div>
+       <div class="field"><label for="who">Show</label><select id="who"><option value="G00">Group G00</option><option value="G01">Group G01</option><option value="G02">Group G02</option><option value="G03">Group G03</option></select></div>
+       <div class="field"><label>Candidate</label><div class="segments"><button class="active" data-candidate="A">A · Feasible</button><button data-candidate="B">B · Improved</button></div></div>
+       <div class="field search"><label for="lookup">Find a lesson</label><input id="lookup" type="search" placeholder="Search subject / teacher / room"></div>
+       <div class="field"><label for="zoom">Cell size</label><input id="zoom" aria-label="Timetable zoom" type="range" min="56" max="112" value="76"></div>
+     </div>
+     <div class="pane-note"><span><strong id="viewLabel">Class G00</strong> · Select any lesson to inspect its constraints</span><label><input type="checkbox" id="showDiff"> Highlight changed placements</label></div>
+     <div class="timetable" id="viewport"><div class="table-grid" id="table" style="--days:10"></div></div>
+     </div>
+   </div>
+   <aside class="side"><div class="pane"><h2>Selected placement</h2><div class="tag" id="selectedTag">No lesson selected</div><div id="selection" style="margin-top:9px"><p class="helptext">Click a lesson on the timetable to inspect the event, teacher, room and applicable rules.</p></div><div class="side-actions"><button class="btn" id="lockButton" disabled>Lock placement</button><button class="btn" id="explainButton" disabled>Explain rules</button></div><div class="status-note" id="statusLine"></div></div>
+   <div class="pane"><h2>Candidate comparison</h2><p class="helptext">The tested Benchmark B candidates passed independent hard validation; this UI grid uses illustrative placements and is not a live result.</p><div class="scorebars"><div><div class="barlabel"><span>A · Baseline</span><b>2,900</b></div><div class="barbg"><i style="width:100%"></i></div></div><div><div class="barlabel"><span>B · Improved</span><b>2,380</b></div><div class="barbg"><i class="better" style="width:82.07%"></i></div></div></div><div class="data-row"><span>Change</span><b>−17.9% vs baseline</b></div><div class="data-row"><span>Optimality proof</span><b>Not proven</b></div></div>
+   <div class="pane"><h2>Rules at a glance</h2><div class="data-row"><span>Teacher overlap</span><b>Hard · required</b></div><div class="data-row"><span>Laboratory capacity</span><b>Hard · required</b></div><div class="data-row"><span>Teacher gaps</span><b>Soft · measured</b></div><div class="data-row"><span>Late periods</span><b>Soft · measured</b></div><p class="helptext" style="margin-top:10px">A future Rules panel will let users edit these in plain language and preview their effect.</p></div></aside>
+   </section>
+   <div class="footer">Veni Grid UX Lab 01 · Static synthetic scheduling data · No external requests, persistence or user accounts · Designed for accessibility and progressive disclosure</div>
+ </main>
+</div>
+<dialog id="jobDialog" class="dialog"><form method="dialog" id="draftForm"><div class="eyebrow">Independent schedule</div><h2>Start a new timetable</h2><p>Each timetable has its own draft, dates, rules and publication lifecycle. Linking existing timetables is optional.</p><div class="field"><label for="jobType">Timetable type</label><select id="jobType"><option>Schools</option><option>Examinations</option><option>Invigilation</option><option>Duties</option><option>Sport</option></select></div><div class="field"><label for="jobName">Draft title</label><input id="jobName" value="My new timetable" required maxlength="50"></div><div class="field"><label for="jobLink">Link an existing schedule?</label><select id="jobLink"><option value="standalone">No, standalone</option><option value="respect">Yes, read-only constraints</option><option value="joint">Joint planning (requires explicit permissions)</option></select></div><div class="dialog-menu"><button type="button" class="btn" id="cancelDialog">Cancel</button><button type="submit" class="btn primary">Create sample draft</button></div></form></dialog>
+<dialog id="informationDialog" class="dialog"><div class="eyebrow">Prototype boundary</div><h2 id="infoTitle">How the workbench works</h2><p id="infoBody">Views, candidate tabs, search, cell selection, locks and the new-timetable dialog are working demonstrations. They do not connect to the solver, store data or publish.</p><div class="dialog-menu"><button class="btn primary" id="closeInformation">Close</button></div></dialog>
+<script>
+'use strict';
+const $=id=>document.getElementById(id);
+let candidate='A', selected=null, module='Schools', localLocks=new Set();
+const subjects=[['MATH','Mathematics','math'],['ENG','English','eng'],['SCI','Physical Science','sci'],['HIST','History','hist'],['LIFE','Life Orientation','life']];
+const periods=['08:00','08:40','09:20','10:20','11:00','11:40','12:20'];
+function data(group,day,period,version){
+  // Deliberately synthetic demonstration; not an exact CP-SAT assignment export.
+  const seed=(day*3+period*2+(Number(group.slice(1))*5))%14;
+  if(seed===4||seed===11)return null;
+  let s=subjects[(day+period+(Number(group.slice(1))%3))%5];
+  let per=period;
+  return {id:`${group}:${day}:${period}`,subject:s[1],abbr:s[0],type:s[2],period:per,teacher:`${s[0]}${String(Number(group.slice(1))/2|0).padStart(2,'0')}`,room:s[0]==='SCI'?'LAB'+(Number(group.slice(1))>>1):'R'+group.slice(1),day,group,lock:false};
+}
+function fillOptions(){
+ const p=$('perspective').value,who=$('who'),prior=who.value;
+ who.replaceChildren();
+ const items=p==='Class'?['G00','G01','G02','G03']:p==='Teacher'?['MATH00','ENG00','SCI00','HIST00']:['R00','R01','LAB0','R02'];
+ for(const value of items){const o=document.createElement('option');o.value=value;o.textContent=(p==='Class'?'Group ':p==='Teacher'?'Teacher ':'Room ')+value;who.appendChild(o)}
+ if(items.includes(prior))who.value=prior;
+}
+function viewEntries(day,p){
+ const mode=$('perspective').value,who=$('who').value,all=[];
+ for(const group of ['G00','G01','G02','G03']){
+  const obj=data(group,day,p,candidate);
+  if(!obj)continue;
+  if(mode==='Class'&&group!==who)continue;
+  if(mode==='Teacher'&&obj.teacher!==who)continue;
+  if(mode==='Room'&&obj.room!==who)continue;
+  all.push(obj);
+ }
+ return all[0]||null;
+}
+function render(){
+ $('table').style.setProperty('--h',$('zoom').value+'px');
+ $('table').style.setProperty('--w',Math.round(Number($('zoom').value)*2.24)+'px');
+ $('modeCaption').textContent=(candidate==='A'?'A · Feasible':'B · Improved')+' · UI sample';
+ $('qualityNumber').textContent=candidate==='A'?'2,900':'2,380';
+ $('qualityHelp').textContent=candidate==='A'?'Baseline measured candidate':'Measured improvement, not proved optimal';
+ $('viewLabel').textContent=`${$('perspective').value} ${$('who').value}`;
+ document.querySelectorAll('[data-candidate]').forEach(x=>{x.classList.toggle('active',x.dataset.candidate===candidate);x.setAttribute('aria-pressed',x.dataset.candidate===candidate)});
+ const grid=$('table');grid.replaceChildren();grid.style.setProperty('--days',10);
+ const corner=document.createElement('div');corner.className='corner';corner.setAttribute('aria-hidden','true');grid.appendChild(corner);
+ for(let d=1;d<=10;d++){const el=document.createElement('div');el.className='dayhead';el.innerHTML=`<span>Day ${String(d).padStart(2,'0')}</span><small>Cycle</small>`;grid.appendChild(el)}
+ const query=$('lookup').value.trim().toLowerCase();
+ for(let p=1;p<=7;p++){
+  const time=document.createElement('div');time.className='period';time.innerHTML=`P${p}<small>${periods[p-1]}</small>`;grid.appendChild(time);
+  for(let d=1;d<=10;d++){
+   const wrapper=document.createElement('button');wrapper.className='cell';wrapper.type='button';wrapper.setAttribute('aria-label',`Day ${d}, period ${p}`);
+   const lesson=viewEntries(d,p);
+   if(lesson){
+    const matches=!query||[lesson.subject,lesson.abbr,lesson.teacher,lesson.room].some(x=>x.toLowerCase().includes(query));
+    if(!matches)wrapper.classList.add('dim');
+    if($('showDiff').checked&&d===2&&(p===4||p===7))wrapper.classList.add('changed');
+    if(selected?.id===lesson.id)wrapper.classList.add('current');
+    const box=document.createElement('div');box.className='lesson '+lesson.type;
+    const title=document.createElement('strong');title.textContent=lesson.subject;
+    const group=document.createElement('small');group.textContent=lesson.group;
+    const third=document.createElement('small');third.className='teacher';third.textContent=lesson.teacher+' · '+lesson.room+(localLocks.has(lesson.id)?' 🔒':'');
+    box.append(title,group,third);wrapper.append(box);wrapper.addEventListener('click',()=>selectLesson(lesson));
+   }else{wrapper.innerHTML='<div class="empty" aria-hidden="true">·</div>';wrapper.addEventListener('click',()=>{selected=null;updateInspector()})}
+   grid.appendChild(wrapper);
+  }
+ }
+}
+function selectLesson(item){selected=item;updateInspector();render()}
+function updateInspector(){
+ $('statusLine').textContent='';$('lockButton').disabled=!selected;$('explainButton').disabled=!selected;
+ if(!selected){$('selectedTag').textContent='No lesson selected';$('selection').innerHTML='<p class="helptext">Click a lesson on the timetable to inspect its event, teacher, room and applicable rules.</p>';return}
+ $('selectedTag').textContent=`Day ${selected.day} · Period ${selected.period}`;
+ const target=$('selection');target.replaceChildren();
+ for(const [label,value] of [['Subject',selected.subject],['Group',selected.group],['Teacher',selected.teacher],['Room',selected.room],['Placement',`D${selected.day} P${selected.period}`],['Conflict check','Not checked: illustrative cells']]){
+  let row=document.createElement('div');row.className='data-row';let a=document.createElement('span'),b=document.createElement('b');a.textContent=label;b.textContent=value;row.append(a,b);target.appendChild(row)
+ }
+ $('lockButton').textContent=localLocks.has(selected.id)?'Unlock (local)':'Lock (local)';
+}
+$('perspective').addEventListener('change',()=>{fillOptions();selected=null;updateInspector();render()});
+$('who').addEventListener('change',()=>{selected=null;updateInspector();render()});
+$('lookup').addEventListener('input',render);$('zoom').addEventListener('input',render);$('showDiff').addEventListener('change',render);
+document.querySelectorAll('[data-candidate]').forEach(x=>x.addEventListener('click',()=>{candidate=x.dataset.candidate;selected=null;updateInspector();render()}));
+$('lockButton').addEventListener('click',()=>{if(!selected)return;if(localLocks.has(selected.id))localLocks.delete(selected.id);else localLocks.add(selected.id);$('statusLine').textContent='Local UI-only lock toggled. Not saved or sent to a solver.';const note=$('statusLine').textContent;updateInspector();$('statusLine').textContent=note;render()});
+$('explainButton').addEventListener('click',()=>{if(!selected)return;showInfo('Rule interpretation',`This ${selected.subject} lesson uses an eligible teacher and room. A production version will show each enforced hard rule, applicable preference and move impact. No solver explanation is attached to this UI prototype.`)});
+function showInfo(title,text){$('infoTitle').textContent=title;$('infoBody').textContent=text;$('informationDialog').showModal()}
+$('helpButton').addEventListener('click',()=>showInfo('How the workbench works','Class, teacher and room views; search; candidate comparison; zoom; local locks; and independent timetable creation are interactive UI examples. A real Grid service will validate every edit, audit permissions, and separate solve, review and publication.'));
+$('closeInformation').addEventListener('click',()=>$('informationDialog').close());
+$('newJob').addEventListener('click',()=>$('jobDialog').showModal());$('cancelDialog').addEventListener('click',()=>$('jobDialog').close());
+$('draftForm').addEventListener('submit',e=>{e.preventDefault();const name=$('jobName').value.trim();if(!name)return;module=$('jobType').value;$('pageTitle').textContent=name+' (local prototype)';document.querySelectorAll('[data-module]').forEach(n=>n.classList.toggle('selected',n.dataset.module===module));$('jobDialog').close();showInfo('Local draft created',`Created a UI-only ${module} draft using ${$('jobLink').selectedOptions[0].textContent}. No data was saved, imported or scheduled. Each module can run independently in the eventual product.`)});
+document.querySelectorAll('[data-module]').forEach(x=>x.addEventListener('click',()=>{module=x.dataset.module;document.querySelectorAll('[data-module]').forEach(n=>n.classList.toggle('selected',n===x));if(module==='Schools'){$('pageTitle').textContent='Academic master timetable'}else {$('pageTitle').textContent=module+' · independent timetable';showInfo(module+' module',`The ${module} workspace will have its own inputs and publication lifecycle. This prototype demonstrates the navigation only; the underlying synthetic timetable grid remains an academic example.`)}}));
+fillOptions();render();updateInspector();
+</script>
+</body></html>
