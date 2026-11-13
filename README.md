@@ -112,3 +112,23 @@ The optional **Q3 policy 0.2.0** adds explicit protected nonteaching intervals a
 A **1,500-learner C0 synthetic dataset** exercises the subject-choice input and supplied-section validator (9,000 requests, 450 constructed section offerings); **no automatic option-block planning or school-scale solve is claimed**. See [Benchmark C0 scope](docs/BENCHMARK_C0_SCOPE.md).
 
 On a fresh checkout, run `python -m scripts.prepare_workspace`, then `python -m pytest -q tests tests_solver quality_tests q2_tests q3_tests`, `python -m scripts.run_q3_probe --seconds 20` and `python -m scripts.build_benchmark_c0`. Only synthetic data; no deployment or publication.
+
+## O1 option-block generation (review candidate)
+
+The **O1 demand-first option solver** accepts learner requests without any
+preconstructed blocks or sections and constructs a conflict-free plan using
+OR-Tools CP-SAT. An independent options validator checks every output.
+The fast profile colours whole subject families; an exact flexible profile
+may place sections of the same subject in different blocks. Single-family
+impossibility is explicitly scoped and does **not** prove the general model
+impossible. Staffing, rooms, curriculum lesson times and publication remain
+separate later gates; no other timetable is changed.
+
+The C0 synthetic run generates **six blocks and 360 sections** for 1,500 invented
+learners (9,000 requests), rather than copying the previously supplied 450-section
+witness. A crossed-choice C1 case exercises the true flexible profile and its
+infeasible counterpart. This is not ACTion/aSc functionality parity.
+
+Run `python -m pytest -q o1_tests` and `python -m scripts.run_o1_benchmarks`.
+See [O1 solver contract](docs/O1_OPTION_DESIGN.md) and
+[Benchmark progression](docs/BENCHMARK_C1_SCALE.md).
