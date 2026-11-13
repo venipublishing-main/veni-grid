@@ -17,7 +17,7 @@ test = ["pytest>=8"]
 veni-grid-c1 = "veni_grid_solver.__main__:main"
 
 [tool.setuptools.packages.find]
-include = ["veni_grid_contract*", "veni_grid_solver*", "veni_grid_quality*", "veni_grid_options*"]
+include = ["veni_grid_contract*", "veni_grid_solver*", "veni_grid_quality*", "veni_grid_options*", "veni_grid_integration*"]
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
