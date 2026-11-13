@@ -132,3 +132,28 @@ infeasible counterpart. This is not ACTion/aSc functionality parity.
 Run `python -m pytest -q o1_tests` and `python -m scripts.run_o1_benchmarks`.
 See [O1 solver contract](docs/O1_OPTION_DESIGN.md) and
 [Benchmark progression](docs/BENCHMARK_C1_SCALE.md).
+
+## C2 qualified teachers and classrooms (review candidate)
+
+The standalone `veni_grid_integration` module accepts an **unchanged,
+accepted O1 section plan**, explicitly supplied curriculum requirements,
+qualified teachers, classroom capacities/type tags and calendar windows.
+It uses the existing independently checked O1-to-C1 handoff and real CP-SAT
+lesson placement. A maximum-matching preflight rejects impossible simultaneous
+staff/room assignments before expensive search. This **does not automatically
+rebuild O1 choices**, certify official teacher registrations or publish a timetable.
+
+The small crossed-choice benchmark generated 18 actual lessons across nine
+sections using four subject-qualified synthetic teachers and three suitable
+rooms (including a specialist lab), with independent hard validation. The
+1,500-learner **resource-preflight-only** examples identify 60 simultaneous
+sections against only 30 suitable rooms or qualified staff—without running a
+full 1,500-learner school timetable search.
+
+Run `python -m scripts.prepare_workspace`, then
+`python -m pytest -q tests tests_solver quality_tests q2_tests q3_tests o1_tests c2_tests`
+and `python -m scripts.run_c2_probes`. See
+[C2 exact boundary](docs/C2_O1_TO_TEACHING.md) and
+[C2 benchmark gates](docs/BENCHMARK_C2_RESOURCE_GATES.md).
+Only invented data is used; no calendar, staffing records or other independent
+Grid timetable is loaded without explicit input. C1/Q1/Q2/Q3/O1 source is unchanged.

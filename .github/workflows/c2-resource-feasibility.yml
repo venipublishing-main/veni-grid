@@ -1,0 +1,74 @@
+name: C2 O1-to-teaching qualified staff and classrooms
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  c2-supply-and-placement:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Checkout without stored credentials
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Set up Python 3.13
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.13'
+      - name: Install reviewed solver dependencies and source
+        run: python -m pip install -c requirements-solver-reviewed.txt -e ".[solver,test]"
+      - name: Check dependency installation and regenerate original fixtures
+        run: |
+          python -m pip check
+          python -m scripts.prepare_workspace
+          mkdir -p c2-output
+      - name: Run 530 full regression tests including C2
+        run: python -m pytest -q tests tests_solver quality_tests q2_tests q3_tests o1_tests c2_tests --junitxml=c2-output/pytest-results.xml
+      - name: Require full regression count with no skips
+        run: |
+          python - <<'PY'
+          import xml.etree.ElementTree as ET
+          root=ET.parse('c2-output/pytest-results.xml').getroot()
+          counts={k:sum(int(s.attrib.get(k,0)) for s in root.iter('testsuite'))
+                  for k in ('tests','failures','errors','skipped')}
+          assert counts=={'tests':531,'failures':0,'errors':0,'skipped':0},counts
+          print('Verified C2 full regression:',counts)
+          PY
+      - name: Execute real O1 to C2 CP-SAT lesson assignments and resource bottlenecks
+        run: python -m scripts.run_c2_probes
+      - name: Check actual teaching timetable and mathematical shortage receipts
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          report=json.loads(Path('c2-output/c2-results.json').read_text())
+          good=report['C2_VALID_TEACHERS_ROOMS']
+          assert good['status']=='FEASIBLE' and good['stage']=='DONE'
+          assert good['independent_hard_validation']=='PASSED'
+          assert (good['event_count'],good['teacher_allocation_count'],good['room_allocation_count'])==(18,18,18)
+          assert (good['staff_count'],good['room_count'])==(4,3)
+          assert good['source_unchanged'] and good['publication']=='NOT_GRANTED'
+          negatives=[n for n in report if n!='C2_VALID_TEACHERS_ROOMS']
+          assert len(negatives)==8,negatives
+          assert all(report[n]['status']=='INFEASIBLE' and report[n]['proof_scope']=='FIXED_O1_C2' for n in negatives)
+          absence=report['C2_SCIENCE_TEACHER_UNAVAILABLE_SECOND_DAY']
+          assert absence['stage']=='PLACEMENT' and absence['solver_status']=='INFEASIBLE'
+          rooms=report['C2_1500_LEARNERS_30_ROOMS_FOR_60_SIMULTANEOUS_SECTIONS']
+          staff=report['C2_1500_LEARNERS_30_TEACHERS_FOR_60_SIMULTANEOUS_SECTIONS']
+          assert 'BLOCK_CLASSROOM_SHORTAGE' in rooms['findings'][0] and '30 of 60' in rooms['findings'][0]
+          assert 'BLOCK_TEACHER_SHORTAGE' in staff['findings'][0] and '30 of 60' in staff['findings'][0]
+          print('Actual generated C2 timetable and independent resource bottlenecks verified')
+          PY
+      - name: Preserve strictly synthetic execution evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: c2-qualified-teaching-${{ github.run_id }}
+          path: c2-output/
+          if-no-files-found: warn
+          retention-days: 7
