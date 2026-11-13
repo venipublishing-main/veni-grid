@@ -27,7 +27,7 @@ jobs:
           python -m pip check
           python -m scripts.prepare_workspace
           mkdir -p c2-output
-      - name: Run 530 full regression tests including C2
+      - name: Run 531 full regression tests including C2
         run: python -m pytest -q tests tests_solver quality_tests q2_tests q3_tests o1_tests c2_tests --junitxml=c2-output/pytest-results.xml
       - name: Require full regression count with no skips
         run: |
