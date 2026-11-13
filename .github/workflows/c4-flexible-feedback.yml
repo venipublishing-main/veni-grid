@@ -1,0 +1,81 @@
+name: C4 flexible multiple-occurrence resource feedback and human review
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  c4-integration:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Checkout without saved credentials
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Configure Python 3.13
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.13'
+      - name: Install pinned solver dependencies and editable source
+        run: python -m pip install -c requirements-solver-reviewed.txt -e ".[solver,test]"
+      - name: Prepare generated synthetic C1 fixtures and C2 actual timetable
+        run: |
+          python -m pip check
+          python -m scripts.prepare_workspace
+          python -m scripts.run_c2_probes
+          mkdir -p c4-output
+      - name: Full C1 to C4 regression suite
+        run: python -m pytest -q tests tests_solver quality_tests q2_tests q3_tests o1_tests c2_tests c3_tests c4_tests --junitxml=c4-output/c4-junit.xml
+      - name: Enforce 570 exact tests and zero skipped tests
+        run: |
+          python - <<'PY'
+          import xml.etree.ElementTree as ET
+          root=ET.parse('c4-output/c4-junit.xml').getroot()
+          n={field:sum(int(s.attrib.get(field,0)) for s in root.iter('testsuite')) for field in ('tests','failures','errors','skipped')}
+          assert n=={'tests':570,'failures':0,'errors':0,'skipped':0},n
+          print('C4 full conformance:',n)
+          PY
+      - name: Real CP-SAT flexible multi-occurrence replanning and review
+        run: python -m scripts.run_c4_probes
+      - name: Check actual learner, teacher, room and review receipts
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          r=json.loads(Path('c4-output/c4-summary.json').read_text())
+          p=json.loads(Path('c4-output/c4-review-receipt.json').read_text())
+          assert r['original_status']=='INFEASIBLE' and r['status']=='PROPOSED_VALIDATED'
+          assert r['learners']==16 and r['requests']==48 and r['proposed_sections']==9
+          assert r['teaching_occurrences']==18 and r['teacher_assignments']==18 and r['room_assignments']==18
+          assert r['validation']=='PASSED' and r['original_unchanged']
+          assert r['changed_learner_requests']==len(p['changed_request_ids'])==18
+          assert p['authority']=='SIMULATED_IN_MEMORY_ONLY'
+          assert p['approval']=='REQUIRES_AUTHENTICATED_REVIEW'
+          assert p['saved']=='NO' and p['publication']=='NOT_GRANTED'
+          assert r['publication']=='NOT_GRANTED'
+          h=Path('c4-output/c4-review-before-after.html').read_text()
+          assert 'Option block 1 on Day 1' in h and 'Approval' in h
+          assert 'c4-proposed-teaching-timetable.html' in h
+          assert 'data-teacher=' in h and 'data-room=' in h
+          print('All full source and independent review conditions confirmed')
+          PY
+      - name: Static JavaScript syntax check for user review page
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('c4-output/c4-review-before-after.html').read_text()
+          Path('/tmp/c4-review.js').write_text(p.rsplit('<script>',1)[1].split('</script>',1)[0])
+          PY
+          node --check /tmp/c4-review.js
+      - name: Preserve synthetic execution receipts
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: c4-feedback-${{ github.run_id }}
+          path: c4-output/
+          if-no-files-found: warn
+          retention-days: 7
