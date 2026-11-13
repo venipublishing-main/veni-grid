@@ -1,0 +1,70 @@
+name: O1 demand-first option generation and 1500-learner benchmark
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  o1-conformance:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Checkout without stored credentials
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Set up Python 3.13
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.13'
+      - name: Install reviewed solver dependencies and local package
+        run: python -m pip install -c requirements-solver-reviewed.txt -e ".[solver,test]"
+      - name: Prepare synthetic fixtures
+        run: |
+          python -m pip check
+          python -m scripts.prepare_workspace
+      - name: Run all 508 regression tests including O1
+        run: |
+          mkdir -p o1-output
+          python -m pytest -q tests tests_solver quality_tests q2_tests q3_tests o1_tests --junitxml=o1-output/pytest-results.xml
+      - name: Assert fixed conformance count and no skipped tests
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import xml.etree.ElementTree as ET
+          root=ET.parse('o1-output/pytest-results.xml').getroot()
+          suites=list(root.iter('testsuite'))
+          counts={k:sum(int(s.attrib.get(k,0)) for s in suites) for k in ('tests','failures','errors','skipped')}
+          expected={'tests':508,'failures':0,'errors':0,'skipped':0}
+          assert counts==expected, f'O1 regression baseline changed unexpectedly: {counts}'
+          print('Verified tests:',counts)
+          PY
+      - name: Run real CP-SAT option construction on C0 and crossed C1
+        run: python -m scripts.run_o1_benchmarks
+      - name: Assert generated sections are independently valid
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          report=json.loads(Path('o1-output/o1-benchmark-summary.json').read_text())
+          c0=report['c0'];c1=report['c1_flexible'];restricted=report['c1_single']; impossible=report['c1_impossible']
+          assert c0['status']=='FEASIBLE' and c0['independent_validation']=='PASSED'
+          assert (c0['block_count'],c0['offering_count'],c0['allocations'])==(6,360,9000)
+          assert c1['status']=='FEASIBLE' and c1['profile']=='FLEXIBLE_SECTIONS' and c1['independent_validation']=='PASSED'
+          assert restricted['proof_scope']=='SINGLE_BLOCK_ONLY'
+          assert impossible['status']=='INFEASIBLE' and impossible['proof_scope']=='FULL_O1'
+          assert report['teacher_and_rooms']=='NOT_MODELLED'
+          assert report['academic_lesson_placement']=='NOT_MODELLED'
+          print('O1 generated options validated; staff/rooms and lesson placement NOT modelled')
+          PY
+      - name: Preserve synthetic execution receipts
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: o1-options-${{ github.run_id }}
+          path: o1-output/
+          if-no-files-found: warn
+          retention-days: 7
