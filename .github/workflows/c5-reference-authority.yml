@@ -1,0 +1,75 @@
+name: C5 tenant-scoped approval and rollback reference
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  c5-reference:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - name: Checkout without saved credentials
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Configure Python 3.13
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.13'
+      - name: Install reviewed CP-SAT and test dependencies
+        run: python -m pip install -c requirements-solver-reviewed.txt -e ".[solver,test]"
+      - name: Regenerate synthetic fixtures and original C2 teaching timetable
+        run: |
+          python -m pip check
+          python -m scripts.prepare_workspace
+          python -m scripts.run_c2_probes
+          mkdir -p c5-output
+      - name: All 592 C1 to C5 regression tests
+        run: python -m pytest -q tests tests_solver quality_tests q2_tests q3_tests o1_tests c2_tests c3_tests c4_tests c5_tests --junitxml=c5-output/pytest-results.xml
+      - name: Assert baseline count and no failures or skips
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import xml.etree.ElementTree as ET
+          root=ET.parse('c5-output/pytest-results.xml').getroot()
+          x={k:sum(int(s.attrib.get(k,0)) for s in root.iter('testsuite')) for k in ('tests','failures','errors','skipped')}
+          assert x=={'tests':592,'failures':0,'errors':0,'skipped':0},x
+          print('C5 full regression independently checked:',x)
+          PY
+      - name: Execute real C4 proposal through transactional C5 authority simulation
+        run: python -m scripts.run_c5_reference
+      - name: Assert independent approval, publication and restoration boundaries
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          r=json.loads(Path('c5-output/c5-reference-summary.json').read_text())
+          assert r['kind']=='C5_SQLITE_DEVELOPMENT_REFERENCE' and r['synthetic_only']
+          assert r['authentication']=='NOT_IMPLEMENTED' and r['real_authorisation']=='NOT_CONNECTED'
+          assert r['proposal_status']=='PENDING' and r['staged_without_head_change']
+          assert r['approved_revision']==2 and r['first_published_revision']==2
+          assert r['restore_revision']==3 and r['published_revision_after_restore_before_republish']==2
+          assert r['final_published_revision']==3 and r['audit_chain_valid']
+          assert r['original_c4_result']=={'preserved_requests':48,'changed_request_count':18,'proposed_sections':9,'independent_teaching_events':18}
+          assert r['scope']=='ACADEMIC_OPTIONS_ONLY' and not r['academic_timetable_published']
+          assert r['other_schedule_changes']=='NONE' and r['external_distribution']=='NOT_IMPLEMENTED'
+          html=Path('c5-output/c5-approval-history.html').read_text()
+          assert 'Approve — login integration required' in html and '<button disabled>' in html
+          assert 'Who approved this timetable version?' in html
+          print('C5 authority reference and no-live-integration boundary verified')
+          PY
+      - name: Preserve C5 proof receipts without storing a school database
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: c5-reference-${{ github.run_id }}
+          path: |
+            c5-output/pytest-results.xml
+            c5-output/c5-reference-summary.json
+            c5-output/c5-approval-history.html
+          if-no-files-found: warn
+          retention-days: 7
