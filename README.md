@@ -176,3 +176,31 @@ Run `python -m scripts.run_c2_probes`,
 `readable/c2-teaching-timetable-explained.html` and
 `c3-output/c3-feedback-before-after.html`.
 Read [C3 exact boundaries](docs/C3_RESOURCE_FEEDBACK.md). No real school data.
+
+## C4 flexible multi-occurrence teaching feedback (review candidate)
+
+C4 is a small, **additive** resource-aware replanner that can place a subject's
+sections in *different* option blocks, rebuild section counts from learner
+requests, and verify **multiple actual teaching occurrences** per section using
+C2's real qualified-teacher, room-capacity and time-placement checks. It starts
+only from a proved **fixed-plan** C2 contradiction and never edits a source.
+
+A controlled synthetic demonstration uses **16 learners with 48 compulsory
+requests**. The original ten-section option plan could not be staffed. C4
+reassigned 18 subject-choice blocks and generated nine sections; all 48 choices
+remained fulfilled and C2 independently validated 18 teaching events across
+two cycle days, including laboratory doubles. C4's conservative default
+prototype supports at most 120 requests; this is **not** a 1,500-learner
+joint timetabling claim.
+
+The [human review preview](docs/C4_FLEXIBLE_FEEDBACK.md) and
+[security/approval boundary](docs/C4_REVIEW_BOUNDARY.md) are review-only. No
+real acceptance, persistence or publication is implemented. A simulated
+ACCEPTED adapter reference is never an authority record. C1–C3 and all other
+independent Grid timetable jobs remain unchanged.
+
+Reproduce from a fresh clone with `python -m scripts.prepare_workspace`,
+`python -m scripts.run_c2_probes`,
+`python -m pytest -q tests tests_solver quality_tests q2_tests q3_tests o1_tests c2_tests c3_tests c4_tests`,
+and `python -m scripts.run_c4_probes`. The actual readable review is then at
+`c4-output/c4-review-before-after.html`.
