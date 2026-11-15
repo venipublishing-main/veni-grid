@@ -231,3 +231,30 @@ plain-English approval history under ignored `c5-output/`.
 See [C5 exact security boundaries](docs/C5_AUTHORITY_REFERENCE.md) and
 [negative-test matrix](docs/C5_TEST_MATRIX.md). No existing C1–C4 source
 or published timetable is changed by this additive PR.
+
+## C6 shared Veni identity and private Grid schema review
+
+**REVIEW / OFFLINE ONLY — no Supabase migration applied or live auth enabled.**
+C6 reuses the existing Veni Account Supabase Auth identity; it does not create a
+second Grid account. A pinned-issuer, trusted-JWKS, active-session JWT adapter
+checks RSA/ES256 tokens and enforces MFA AAL2 for high-risk authority actions.
+An independent Veni Flow organisation membership lookup is required before
+binding the user's identity to Grid. An Account login or paid entitlement does
+**not** grant rights to a school timetable.
+
+The PostgreSQL source in `db/review/c6_grid_private_schema.sql` is a deliberately
+**UNAPPLIED** private-schema/RLS-default-deny design, not a migration or a
+verified database deployment. The connected Veni Publishing staging project
+was INACTIVE when assessed; live RLS/transaction tests are pending. No client
+Data API grants or approval functions are created.
+
+Run the unchanged 592 inherited tests plus 27 new C6 identity/schema review
+tests (619 total) with `python -m scripts.prepare_workspace`,
+`python -m scripts.run_c2_probes`, and
+`python -m pytest -q tests tests_solver quality_tests q2_tests q3_tests o1_tests c2_tests c3_tests c4_tests c5_tests c6_tests`.
+Then execute `python -m scripts.run_c6_security_probe` for a synthetic
+signed-token demonstration; its self-contained explanation is
+`c6-output/c6-security-explained.html`.
+
+See [account contract](docs/C6_VENI_ACCOUNT_FLOW_SECURITY_GATE.md) and
+[PostgreSQL staging gate](docs/C6_POSTGRES_REVIEW_GATE.md).

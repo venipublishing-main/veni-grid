@@ -36,3 +36,4 @@ private/
 *.sqlite
 *.sqlite-wal
 *.sqlite-shm
+/c6-output/
