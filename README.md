@@ -204,3 +204,30 @@ Reproduce from a fresh clone with `python -m scripts.prepare_workspace`,
 `python -m pytest -q tests tests_solver quality_tests q2_tests q3_tests o1_tests c2_tests c3_tests c4_tests`,
 and `python -m scripts.run_c4_probes`. The actual readable review is then at
 `c4-output/c4-review-before-after.html`.
+
+## C5 reference authority — local development only
+
+C5 adds a **tenant-scoped SQLite transactional reference backend** for staging
+independently verified C4 option-plan proposals, two-person approval, immutable
+version history, explicit option-version publication pointers and append-only
+reasoned audit/rollback. The default-deny role grants apply per scheduling
+namespace; no shared Veni Account login ever automatically grants school
+organisation authority. Each approved O1 options version remains distinct from
+its separately modelled academic teaching timetable, exams or invigilation.
+
+**No real Veni Account session verification, Supabase/RLS, connected API,
+production publication or live-school authentication is implemented.**
+The in-process Principal is not a credential; production needs a trusted Veni
+Account verifier and server-enforced permissions. Tenant provisioning is disabled
+without explicit development bootstrap.
+
+The 570 earlier tests and 22 new C5 tests total **592 full regressions**. Run
+`python -m scripts.prepare_workspace`,
+`python -m scripts.run_c2_probes`,
+`python -m pytest -q tests tests_solver quality_tests q2_tests q3_tests o1_tests c2_tests c3_tests c4_tests c5_tests`
+and `python -m scripts.run_c5_reference`. The latter writes a synthetic,
+plain-English approval history under ignored `c5-output/`.
+
+See [C5 exact security boundaries](docs/C5_AUTHORITY_REFERENCE.md) and
+[negative-test matrix](docs/C5_TEST_MATRIX.md). No existing C1–C4 source
+or published timetable is changed by this additive PR.
