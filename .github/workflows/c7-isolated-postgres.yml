@@ -1,0 +1,98 @@
+name: C7 executable isolated PostgreSQL security gates
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  c7-postgresql:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: grid_c7_isolated
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: disposable-ci-only
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d grid_c7_isolated"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      GRID_C7_PG_DSN: postgresql://postgres:disposable-ci-only@localhost:5432/grid_c7_isolated
+      GRID_C7_DISPOSABLE_ONLY: "YES"
+      PYTHONUNBUFFERED: "1"
+    steps:
+      - name: Check out without persisted credentials
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Set up Python 3.13
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.13'
+      - name: Install reviewed Grid dependencies and PostgreSQL test client
+        run: |
+          python -m pip install -c requirements-solver-reviewed.txt -e '.[solver,test,auth,postgres-test]'
+          python -m pip check
+      - name: Regenerate synthetic Grid fixtures and validated C2 teaching example
+        run: |
+          python -m scripts.prepare_workspace
+          python -m scripts.run_c2_probes
+          mkdir -p c7-output
+      - name: Run all 647 tests with real PostgreSQL 17
+        run: >-
+          python -m pytest -q tests tests_solver quality_tests q2_tests q3_tests
+          o1_tests c2_tests c3_tests c4_tests c5_tests c6_tests c7_tests
+          --junitxml=c7-output/pytest-results.xml
+      - name: Confirm 619 inherited and 28 C7 tests with no skipped results
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from xml.etree import ElementTree as ET
+          root=ET.parse('c7-output/pytest-results.xml').getroot()
+          counts={k:sum(int(t.attrib.get(k,0)) for t in root.iter('testsuite'))
+                  for k in ('tests','failures','errors','skipped')}
+          assert counts=={'tests':647,'failures':0,'errors':0,'skipped':0},counts
+          print('C7 full regression and executed PostgreSQL checks:',counts)
+          PY
+      - name: Produce independent real-PostgreSQL receipt and school-friendly explanation
+        run: python -m scripts.run_c7_postgres_receipt
+      - name: Refuse any false live-security claim in receipt
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          a=json.loads(Path('c7-output/c7-postgresql-receipt.json').read_text())
+          assert a['kind']=='C7_EXECUTED_DISPOSABLE_POSTGRESQL_GATE'
+          assert a['executed_real_postgresql'] and a['postgresql_major']==17
+          assert a['private_tables_checked']==8 and a['rls_enabled_and_forced']
+          assert a['direct_anon_authenticated_service_grants']=='NONE'
+          assert a['accidental_authenticated_select_grant_rows_visible']==0
+          assert a['revision_cas_first_write']==1 and a['revision_cas_stale_second_write']==0
+          assert a['runtime_tenant_permission_policies']=='NOT_IMPLEMENTED'
+          assert a['real_jwt_sessions']=='NOT_CONNECTED'
+          assert a['real_approval_transaction']=='NOT_CONNECTED'
+          assert a['live_veni_supabase_changed'] is False
+          assert a['migration_history']=='NOT_CREATED'
+          assert a['production_publication']=='NOT_GRANTED'
+          print('C7 real PostgreSQL and no-live-integration boundaries verified')
+          PY
+      - name: Preserve synthetic database results; never archive credentials or test database
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: c7-postgresql-${{ github.run_id }}
+          path: |
+            c7-output/pytest-results.xml
+            c7-output/c7-postgresql-receipt.json
+            c7-output/c7-postgresql-explained.html
+          if-no-files-found: warn
+          retention-days: 7

@@ -258,3 +258,28 @@ signed-token demonstration; its self-contained explanation is
 
 See [account contract](docs/C6_VENI_ACCOUNT_FLOW_SECURITY_GATE.md) and
 [PostgreSQL staging gate](docs/C6_POSTGRES_REVIEW_GATE.md).
+
+## C7 real isolated PostgreSQL security gate (review)
+
+**C7 now executes the C6 private-schema SQL on real PostgreSQL 17**, but
+only in an ephemeral GitHub Actions service with a minimal synthetic
+`auth.users` stub and disposable `anon`/`authenticated` role imitations.
+The exact database name `grid_c7_isolated` and explicit disposable gate are
+required before any DDL. No live Veni Account project, migration history,
+roles, user data, timetable or production deployment is modified.
+
+C7 verifies default-deny/forced RLS, zero browser grants, an accidental-grant
+RLS defense, school/namespace foreign-key integrity, immutable audit/version
+rows, unique idempotency keys, rollback-style immutable revisions, stale CAS
+and a **real two-connection concurrent compare-and-swap race**. C7 contains
+24 PostgreSQL tests and four static guards (647 full-suite tests including
+619 inherited). Its independent receipt is generated only *after* PostgreSQL
+executes successfully. Official Supabase Auth, session revocation, school RLS
+allow policies, trusted PostgreSQL writer and production approval/publishing
+are NOT connected. `db/review/c6_grid_private_schema.sql` stays a reviewed
+DDL, not a generated Supabase migration.
+
+Read [C7 scope and limits](docs/C7_POSTGRESQL_EXECUTION_GATE.md) and
+[negative-proof matrix](docs/C7_RESULT_MATRIX.md). The GitHub workflow
+`.github/workflows/c7-isolated-postgres.yml` runs the actual service and
+stores only synthetic receipts; no DB credentials or test data are archived.
