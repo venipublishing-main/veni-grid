@@ -1,0 +1,70 @@
+name: C6 Veni Account identity and Grid private-schema review
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  c6-identity-schema-review:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - name: Checkout without stored credentials
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Configure Python 3.13
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.13'
+      - name: Install reviewed solver and cryptographic verifier dependencies
+        run: python -m pip install -c requirements-solver-reviewed.txt -e ".[solver,test,auth]"
+      - name: Regenerate only public synthetic examples
+        run: |
+          python -m pip check
+          python -m scripts.prepare_workspace
+          python -m scripts.run_c2_probes
+          mkdir -p c6-output
+      - name: Full 619 regression and security review tests
+        run: python -m pytest -q tests tests_solver quality_tests q2_tests q3_tests o1_tests c2_tests c3_tests c4_tests c5_tests c6_tests --junitxml=c6-output/pytest-results.xml
+      - name: Enforce expected test count, zero errors and zero skips
+        run: |
+          python - <<'PY'
+          from xml.etree import ElementTree as ET
+          root=ET.parse('c6-output/pytest-results.xml').getroot()
+          totals={n:sum(int(x.attrib.get(n,0)) for x in root.iter('testsuite'))
+                  for n in ('tests','failures','errors','skipped')}
+          assert totals=={'tests':619,'failures':0,'errors':0,'skipped':0},totals
+          print('C6 local/offline gates verified:',totals)
+          PY
+      - name: Verify real offline RSA signature and explicit membership separation
+        run: python -m scripts.run_c6_security_probe
+      - name: Verify receipt does not pretend production authentication or SQL migration
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          r=json.loads(Path('c6-output/c6-security-summary.json').read_text())
+          assert r['kind']=='C6_OFFLINE_IDENTITY_SECURITY_PROBE'
+          assert r['identity']=='CRYPTOGRAPHIC_SIGNATURE_AND_SESSION_GATE_VERIFIED'
+          assert {x['case'] for x in r['rejections']}=={'no_mfa','wrong_issuer','revoked_session'}
+          assert r['live_veni_auth']=='NOT_CONNECTED' and r['live_sessions']=='NOT_CONNECTED'
+          assert r['postgresql_migration']=='UNAPPLIED_REVIEW_ONLY'
+          assert r['rls_execution']=='NOT_RUN' and r['publication']=='NOT_GRANTED'
+          assert 'UNAPPLIED REVIEW DDL' in Path('db/review/c6_grid_private_schema.sql').read_text()
+          print('C6 cryptographic offline boundary and unapplied PostgreSQL state confirmed')
+          PY
+      - name: Preserve only synthetic receipts; no token, database or private key
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: c6-identity-schema-${{ github.run_id }}
+          path: |
+            c6-output/pytest-results.xml
+            c6-output/c6-security-summary.json
+            c6-output/c6-security-explained.html
+          if-no-files-found: warn
+          retention-days: 7
