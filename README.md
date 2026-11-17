@@ -283,3 +283,29 @@ Read [C7 scope and limits](docs/C7_POSTGRESQL_EXECUTION_GATE.md) and
 [negative-proof matrix](docs/C7_RESULT_MATRIX.md). The GitHub workflow
 `.github/workflows/c7-isolated-postgres.yml` runs the actual service and
 stores only synthetic receipts; no DB credentials or test data are archived.
+
+## C8 positive tenant RLS and approval reference (review)
+
+**C8 is NOT a live account or timetable approval service.** It extends the
+C7 isolated PostgreSQL 17 security laboratory with three NOLOGIN / NOBYPASSRLS
+server-only roles, positive read-only RLS for exactly authorised school
+schedules, and a narrow reference transaction for two-person, AAL2-gated
+ACADEMIC_OPTIONS approval. Every stage, source version, actor and schedule is
+synthetic. The C8 context settings are **not authenticators** and can be forged
+by someone holding the privileged server connection; therefore that role
+MUST NOT be exposed or granted to clients. Real server session verification,
+C4 stage-evidence checks and production migration are separate later gates.
+
+The C8 operator has no direct Grid table rights. Its private approval function
+checks current membership, exact approve grant, maker/checker separation,
+source revision and SHA, idempotency and frozen proposal integrity before one
+atomic version + audit commit. **Approval does not publish**. No client access,
+paid entitlement role, cross-school rights or independent timetable publication
+is created. C1–C7 implementation sources are unchanged.
+
+The review-only GitHub workflow starts a disposable PG17 container and uses two
+**separate** test databases. It expects the 647 inherited tests plus 36 new C8
+tests = **683**, but do not claim remote success until CI completes. Run with
+`pytest -q c8_tests` only inside the documented disposable environment.
+See [C8 exact boundary](docs/C8_ISOLATED_AUTHORITY_GATES.md) and
+[C8 test matrix](docs/C8_SECURITY_TEST_MATRIX.md).
