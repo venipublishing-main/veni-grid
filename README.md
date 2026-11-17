@@ -341,3 +341,22 @@ above the retained **683** tests = **706** expected. Do not claim remote
 verification until GitHub finishes. See the
 [C9 exact trust boundary](docs/C9_TRUSTED_BRIDGE.md) and
 [negative-test matrix](docs/C9_SECURITY_MATRIX.md).
+
+## C10 Veni Account transport decision preflight (review only)
+
+The Website/Reserve account work has not ratified whether each Veni Sphere
+uses the same Supabase Auth identity directly or a separate OAuth/PKCE
+handoff. C10 adds a **disabled-by-default, offline server-policy preflight**
+for both candidate transports without choosing one or changing C9's signed
+JWT requirement. It models exact issuer/subject identity, explicit verified
+account linking for OAuth, current sessions/accounts, school membership,
+per-schedule grants, and MFA AAL2 for approval. An account, entitlement or
+matching email alone never grants timetable authority.
+
+All 29 focused C10 cases use invented sessions and lookup callbacks;
+**no live sign-in, browser OAuth exchange, HTTP API, hosted migration,
+publication or real timetable is implemented**. Run
+`python -m pytest -q c10_tests`, alongside the unchanged C1
+`python -m scripts.run_ci` and inherited C9 workflow. Read the
+[C10 trust and decision gate](docs/C10_VENI_ACCOUNT_TRANSPORT_PREFLIGHT.md)
+before attempting any future Account integration.
