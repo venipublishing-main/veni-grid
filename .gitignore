@@ -37,3 +37,4 @@ private/
 *.sqlite-wal
 *.sqlite-shm
 /c6-output/
+/c7-output/

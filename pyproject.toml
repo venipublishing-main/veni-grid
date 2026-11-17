@@ -13,6 +13,7 @@ dependencies = ["pydantic>=2.10,<3", "jsonschema>=4.20"]
 solver = ["ortools==9.15.6755"]
 test = ["pytest>=8"]
 auth = ["PyJWT[crypto]==2.13.0", "cryptography==46.0.4"]
+postgres-test = ["psycopg[binary]==3.2.12"]
 
 [project.scripts]
 veni-grid-c1 = "veni_grid_solver.__main__:main"
