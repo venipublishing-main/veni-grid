@@ -331,8 +331,13 @@ secret strategy. The cross-language C4/C8 fingerprint conventions still need
 an explicit versioned contract. No live Veni Account, Supabase migration,
 school staff/learner data, timetable publication, paid feature or deployment.
 
-C9 adds 21 tests (16 integrated signed-JWT/C4/PostgreSQL and five static)
-above the retained **683** tests = **704** expected. Do not claim remote
+C9 also checks the exact server-approved teaching-resource policy fingerprint
+and rebuilds the derived C2 placement problem before accepting a purportedly
+valid teaching witness. This prevents swapping in a valid but unrelated lesson
+problem; it does not yet establish a live authoritative school-resource feed.
+
+C9 adds 23 tests (18 integrated signed-JWT/C4/PostgreSQL and five static)
+above the retained **683** tests = **706** expected. Do not claim remote
 verification until GitHub finishes. See the
 [C9 exact trust boundary](docs/C9_TRUSTED_BRIDGE.md) and
 [negative-test matrix](docs/C9_SECURITY_MATRIX.md).

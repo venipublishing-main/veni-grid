@@ -48,19 +48,19 @@ jobs:
           python -m scripts.prepare_workspace
           python -m scripts.run_c2_probes
           mkdir -p c9-output
-      - name: Run 704 real regression and synthetic trusted-bridge tests
+      - name: Run 706 real regression and synthetic trusted-bridge tests
         run: >-
           python -m pytest -q tests tests_solver quality_tests q2_tests q3_tests
           o1_tests c2_tests c3_tests c4_tests c5_tests c6_tests c7_tests c8_tests c9_tests
           --junitxml=c9-output/pytest-results.xml
-      - name: Assert 704 tests and no failures errors skips
+      - name: Assert 706 tests and no failures errors skips
         run: |
           python - <<'PY'
           from xml.etree import ElementTree as ET
           r=ET.parse('c9-output/pytest-results.xml').getroot()
           counts={k:sum(int(t.attrib.get(k,0)) for t in r.iter('testsuite'))
                   for k in ('tests','failures','errors','skipped')}
-          assert counts=={'tests':704,'failures':0,'errors':0,'skipped':0},counts
+          assert counts=={'tests':706,'failures':0,'errors':0,'skipped':0},counts
           print('C9 complete conformance:',counts)
           PY
       - name: Re-execute C4 + genuine synthetic RSA JWT + membership and PostgreSQL approval

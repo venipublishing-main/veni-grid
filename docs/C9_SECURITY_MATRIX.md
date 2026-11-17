@@ -9,6 +9,8 @@
 | School membership | Actual PostgreSQL ACTIVE membership read | Veni Flow production membership authority |
 | Explicit grant | Exact proposal/approval grant enforced | Complete delegation/provisioning UI |
 | Mathematical validation | Real `review_errors` checks O1 + C2 and 48/18 evidence | Independent verification inside DB or another service |
+| Resource-policy integrity | Server-pinned C2 target fingerprint rejects modified teacher/room/time policy | Live authoritative school roster and policy store |
+| Evidence lineage | C2 placement problem reconstructed from O1 options + server-pinned C2 target + proposed windows; full problem and source/target hashes compared | DB-native proof or signed service-to-service attestation |
 | Candidate source | Current stored accepted O1 bytes and revision/hash rechecked | Final canonical hash scheme across languages |
 | Staging | PENDING proposal with nine sections, 48 allocations, audit event | Production-grade trusted API/retention |
 | Maker/checker | Different signed actor approves, original planner cannot | Live account/session and role IAM |

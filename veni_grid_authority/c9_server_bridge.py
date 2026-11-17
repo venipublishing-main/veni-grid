@@ -13,10 +13,11 @@ import json
 from typing import Callable, Mapping, Any
 from uuid import UUID, uuid4
 
-from veni_grid_contract.handoff_common import fingerprint
+from veni_grid_contract.handoff_common import fingerprint, snapshot_ref
 from veni_grid_contract.options_handoff import AcceptedOptions
 from veni_grid_contract.option_design import option_errors
 from veni_grid_integration.c4_flexible_feedback import C4Input,C4Result,review_errors
+from veni_grid_integration.c2 import C2Input,build_c2_problem
 from .identity_gate import IdentityGate,bind_grid_principal,IdentityRejected
 
 
@@ -32,13 +33,16 @@ def digest(value: Any) -> str:
 class ServerScheduleRegistration:
     """Trusted server-owned mapping: external O1/C2 IDs -> a real DB scope.
 
-    Registrations are never derived from JWT metadata or a request's org field.
+    The target fingerprint is a server-approved teaching-resource policy, not
+    one supplied by the proposer. Registrations are never derived from JWT
+    metadata or a request's organisation field.
     """
     key: str
     organisation_uuid: str
     schedule_uuid: str
     c4_source_organisation_id: str
     c4_source_schedule_id: str
+    c4_target_sha256: str
 
     def __post_init__(self):
         for attr in ("organisation_uuid", "schedule_uuid"):
@@ -47,6 +51,8 @@ class ServerScheduleRegistration:
                 raise ValueError(f"{attr} must be a canonical server-selected UUID")
         if not self.key or not self.c4_source_organisation_id or not self.c4_source_schedule_id:
             raise ValueError("All trusted registration fields are required")
+        if len(self.c4_target_sha256)!=64 or any(c not in '0123456789abcdef' for c in self.c4_target_sha256):
+            raise ValueError("Trusted C2 resource-policy fingerprint is required")
 
 
 class C9BridgeFailure(ValueError):
@@ -107,6 +113,46 @@ class C9ServerBridge:
             raise C9BridgeFailure('IDEMPOTENCY_KEY_REQUIRED')
         return reason.strip()
 
+    @staticmethod
+    def _verify_c2_lineage(req: C4Input, res: C4Result):
+        """Rebuild the exact C2 problem implied by the proposed O1 witness.
+
+        A valid CoreWitness for an unrelated, easier placement problem is not
+        evidence that this school's proposed options are teachable. C4's
+        independent hard-rule check must be bound to this reconstructed model.
+        """
+        old=req.current; proposal=res.proposed_o1; preview=res.preview_c2
+        if not (1<=res.candidate_attempts<=req.options.max_candidates):
+            raise C9BridgeFailure('C2_PROBLEM_LINEAGE_MISMATCH')
+        specs={s.family_id:s for s in old.target.family_teaching}
+        if len(specs)!=len(old.target.family_teaching):
+            raise C9BridgeFailure('C2_PROBLEM_LINEAGE_MISMATCH')
+        declared={(b.block_id,b.occurrence_key):b for b in req.proposed_block_windows}
+        if len(declared)!=len(req.proposed_block_windows):
+            raise C9BridgeFailure('C2_PROBLEM_LINEAGE_MISMATCH')
+        try:
+            needed={(off.block_id,occ.key)
+                    for off in proposal.offerings for occ in specs[off.family_id].occurrences}
+            target=old.target.model_copy(deep=True)
+            target.block_windows=[declared[k].model_copy(deep=True) for k in sorted(needed)]
+            source=AcceptedOptions(demand=old.source.demand,plan=proposal)
+            transient_ref=snapshot_ref(source,organisation_id=target.organisation_id,
+                schedule_id=old.source_ref.schedule_id,
+                revision=old.source_ref.revision+res.candidate_attempts,
+                origin='GRID',state='ACCEPTED')
+            expected,_=build_c2_problem(C2Input(source_ref=transient_ref,source=source,target=target))
+        except (ValueError,TypeError,KeyError):
+            raise C9BridgeFailure('C2_PROBLEM_LINEAGE_MISMATCH') from None
+        expected_hash=fingerprint(expected)
+        if (preview.placement_problem is None or
+            fingerprint(preview.placement_problem)!=expected_hash or
+            preview.output_fingerprint!=expected_hash or
+            preview.source_fingerprint!=fingerprint(source) or
+            preview.target_fingerprint!=fingerprint(target) or
+            preview.event_count!=len(expected.events) or
+            not preview.source_unchanged):
+            raise C9BridgeFailure('C2_PROBLEM_LINEAGE_MISMATCH')
+
     def stage_reviewed_c4(self, *, access_token: str, schedule_key: str,
                           request: C4Input, result: C4Result,
                           reason: str, idempotency_key: str,
@@ -139,9 +185,12 @@ class C9ServerBridge:
             raise C9BridgeFailure('SOURCE_REGISTRATION_MISMATCH')
         if old.source_ref.content_sha256 != fingerprint(old.source):
             raise C9BridgeFailure('UNTRUSTED_SOURCE_FINGERPRINT')
+        if fingerprint(old.target)!=reg.c4_target_sha256:
+            raise C9BridgeFailure('TARGET_POLICY_MISMATCH')
         issues=review_errors(old,res.proposed_o1,res.preview_c2,res.review)
         if issues:
             raise C9BridgeFailure('INDEPENDENT_C4_REVIEW_FAILED')
+        self._verify_c2_lineage(req,res)
         candidate=AcceptedOptions(demand=old.source.demand,plan=res.proposed_o1)
         if option_errors(candidate.demand,candidate.plan):
             raise C9BridgeFailure('INVALID_OPTION_WITNESS')

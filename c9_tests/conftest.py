@@ -106,10 +106,12 @@ def c9_school(c9_pg_setup,real_c4):
         return jwt.encode(payload,signer or private,algorithm='RS256',headers={'kid':'synthetic-c9-key'})
     reg=ServerScheduleRegistration(key='trusted-school-options',organisation_uuid=org,
         schedule_uuid=sid,c4_source_organisation_id=request.current.source_ref.organisation_id,
-        c4_source_schedule_id=request.current.source_ref.schedule_id)
+        c4_source_schedule_id=request.current.source_ref.schedule_id,
+        c4_target_sha256=fingerprint(request.current.target))
     reg_other=ServerScheduleRegistration(key='wrong-school-options',organisation_uuid=other_org,
         schedule_uuid=other_sid,c4_source_organisation_id=request.current.source_ref.organisation_id,
-        c4_source_schedule_id=request.current.source_ref.schedule_id)
+        c4_source_schedule_id=request.current.source_ref.schedule_id,
+        c4_target_sha256=fingerprint(request.current.target))
     bridge=C9ServerBridge(identity_gate=gate,
         trusted_db_connect=lambda:psycopg.connect(c9_pg_setup['dsn'],connect_timeout=8),
         trusted_registrations={'trusted-school-options':reg,'wrong-school-options':reg_other})

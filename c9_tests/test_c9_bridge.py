@@ -115,6 +115,25 @@ def test_independent_c4_review_tampering_prevents_staging(c9_school):
         stage(c,result=bad)
 
 
+def test_untrusted_teaching_resource_policy_cannot_replace_registered_school_policy(c9_school):
+    c=c9_school;bad=c['request'].model_copy(deep=True)
+    # The stored O1 options are unchanged, but this is a different teaching
+    # policy from the one that the server registered for this school.
+    bad.current.target.timezone='UTC'
+    with pytest.raises(C9BridgeFailure,match='TARGET_POLICY_MISMATCH'):
+        stage(c,request=bad)
+
+
+def test_other_valid_placement_problem_cannot_be_substituted_as_c4_evidence(c9_school):
+    c=c9_school;bad=c['result'].model_copy(deep=True)
+    # A different timezone can leave an otherwise hard-valid C1 placement
+    # witness intact. Its validity must not be treated as proof for this C4
+    # proposal's exact derived school placement problem.
+    bad.preview_c2.placement_problem.timezone='UTC'
+    with pytest.raises(C9BridgeFailure,match='C2_PROBLEM_LINEAGE_MISMATCH'):
+        stage(c,result=bad)
+
+
 def test_stale_source_revision_prevents_unreviewed_overwrite(c9_school):
     import psycopg
     c=c9_school

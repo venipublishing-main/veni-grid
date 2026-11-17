@@ -19,7 +19,7 @@ def test_bridge_accepts_only_server_selected_schedule_key_not_client_org():
 
 
 def test_trusted_registration_rejects_noncanonical_uuid():
-    with pytest.raises(ValueError):ServerScheduleRegistration('x','org:forged','id:schedule','x','y')
+    with pytest.raises(ValueError):ServerScheduleRegistration('x','org:forged','id:schedule','x','y','0'*64)
 
 
 def test_c9_disposable_pg_security_remains_out_of_supabase_migrations():
