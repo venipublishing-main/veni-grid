@@ -360,3 +360,23 @@ publication or real timetable is implemented**. Run
 `python -m scripts.run_ci` and inherited C9 workflow. Read the
 [C10 trust and decision gate](docs/C10_VENI_ACCOUNT_TRANSPORT_PREFLIGHT.md)
 before attempting any future Account integration.
+
+## C11 cross-language byte-exact evidence contract (review only)
+
+C11 introduces a **versioned, school/schedule/source-bound SHA-256 envelope**
+for one independently reviewed academic-options candidate. Existing C4
+`GRID-JSON-1` Python fingerprints and C8 PostgreSQL `jsonb::text` hashes can
+disagree because `jsonb` changes JSON representation. C11 transmits one
+explicit canonical UTF-8 text, so Python and real disposable PostgreSQL 17
+can hash the **same original bytes** and also check the stored JSONB contents.
+
+This does **not** replace C9's historical accepted-version hash conventions,
+modify C8 database tables, implement a live writer, alter another timetable
+or publish an options revision. It is an additive integrity preflight for a
+future separately approved migration. See the
+[C11 exact version/hash contract](docs/C11_VERSIONED_OPTIONS_HASH_CONTRACT.md).
+
+Run `python -m pytest -q c11_tests/test_c11_evidence.py` locally; the
+dedicated GitHub C11 workflow runs **44 tests** including 15 against an
+isolated PostgreSQL 17 service and stores only invented evidence. The C1
+`python -m scripts.run_ci` and C9 signed-approval workflow remain unchanged.

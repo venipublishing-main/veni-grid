@@ -1,0 +1,91 @@
+name: C11 exact UTF-8 scoped options evidence on isolated PG17
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  c11-disposable-postgres:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: grid_c11_isolated
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: disposable-ci-only
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres -d grid_c11_isolated"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      GRID_C11_PG_DSN: postgresql://postgres:disposable-ci-only@localhost:5432/grid_c11_isolated
+      GRID_C11_DISPOSABLE_ONLY: "YES"
+      PYTHONUNBUFFERED: "1"
+    steps:
+      - name: Checkout without stored credentials
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Install Python 3.13
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.13'
+      - name: Install reviewed Grid and disposable PostgreSQL testing packages
+        run: |
+          python -m pip install -c requirements-solver-reviewed.txt -e '.[solver,test,auth,postgres-test]'
+          python -m pip check
+      - name: Prepare only invented C4 and C2 fixtures
+        run: |
+          python -m scripts.prepare_workspace
+          python -m scripts.run_c2_probes
+          mkdir -p c11-output
+      - name: Run all 44 C11 independent Python and real PostgreSQL tests
+        run: python -m pytest -q c11_tests --junitxml=c11-output/pytest.xml
+      - name: Require exactly 44 real test outcomes without failures or skips
+        run: |
+          python - <<'PY'
+          from xml.etree import ElementTree as ET
+          r=ET.parse('c11-output/pytest.xml').getroot()
+          counts={k:sum(int(t.attrib.get(k,0)) for t in r.iter('testsuite'))
+                  for k in ('tests','failures','errors','skipped')}
+          assert counts=={'tests':44,'failures':0,'errors':0,'skipped':0},counts
+          print('C11 exact Python/postgres hash parity:',counts)
+          PY
+      - name: Recompute a real synthetic C4 proposal and executable SQL digest receipt
+        run: python -m scripts.run_c11_receipt
+      - name: Check genuine PG17 evidence and reject all live claims
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          r=json.loads(Path('c11-output/c11-byte-parity-receipt.json').read_text())
+          assert r['kind']=='C11_VERSIONED_EXACT_UTF8_POSTGRES_REFERENCE'
+          assert r['contract_version']=='veni-grid.c11.options-evidence.v1'
+          assert r['serializer']=='GRID-JSON-1'
+          assert r['executed_real_postgresql'] and r['postgresql_major']==17
+          assert r['python_bytes_equal_pg_digest'] and r['postgres_jsonb_text_digest_differs']
+          assert r['compulsory_requests_preserved']==48 and r['proposed_sections']==9
+          assert r['independently_validated_teaching_events']==18
+          assert r['candidate_hard_validated']
+          assert r['proposal_approval']=='NOT_GRANTED' and r['publication']=='NOT_GRANTED'
+          assert r['hosted_supabase_migration']=='NOT_APPLIED'
+          assert r['real_school_data']=='NONE' and r['account_integration']=='DEFERRED'
+          print('C11 verified same original UTF-8 bytes, never a production deployment')
+          PY
+      - name: Retain only artificial case results and digest receipt
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: c11-utf8-postgres-${{ github.run_id }}
+          path: |
+            c11-output/pytest.xml
+            c11-output/c11-byte-parity-receipt.json
+          if-no-files-found: warn
+          retention-days: 7
