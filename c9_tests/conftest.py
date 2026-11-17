@@ -2,14 +2,48 @@
 from __future__ import annotations
 from datetime import datetime,timezone
 from uuid import uuid4
+from pathlib import Path
+import os
 import json
 import pytest
 import jwt
 from cryptography.hazmat.primitives.asymmetric import rsa
 from jwt.algorithms import RSAAlgorithm
 
-# Reuse C8's one session-scoped ephemeral PostgreSQL environment.
-from c8_tests.conftest import pg8_setup
+# C9 attaches to the already-created C8 PG test database, rather than
+# importing C8's session fixture (which would re-create its auth schema).
+# It can independently prepare the exact same disposable database when C9
+# tests run alone; no C8 source modification is required.
+ROOT=Path(__file__).resolve().parents[1]
+
+@pytest.fixture(scope='session')
+def c9_pg_setup():
+    import psycopg
+    from psycopg.conninfo import conninfo_to_dict,make_conninfo
+    if os.environ.get('GRID_C7_DISPOSABLE_ONLY')!='YES' or os.environ.get('GRID_C8_DISPOSABLE_ONLY')!='YES' or os.environ.get('GRID_C9_DISPOSABLE_ONLY')!='YES':
+        raise RuntimeError('C9 refuses any PostgreSQL target without all disposable gates')
+    base=os.environ.get('GRID_C7_PG_DSN','')
+    p=conninfo_to_dict(base)
+    if p.get('dbname')!='grid_c7_isolated' or p.get('host') not in ('localhost','127.0.0.1'):
+        raise RuntimeError('C9 refuses nonlocal or unexpected PostgreSQL target')
+    with psycopg.connect(base,autocommit=True,connect_timeout=10) as bootstrap:
+        name,user,version=bootstrap.execute("SELECT current_database(),current_user,current_setting('server_version_num')::int").fetchone()
+        if name!='grid_c7_isolated' or user!='postgres' or not 170000<=version<180000:
+            raise RuntimeError('C9 refuses unsafe PostgreSQL version or role')
+        exists=bootstrap.execute("SELECT 1 FROM pg_database WHERE datname='grid_c8_isolated'").fetchone()
+        if not exists:bootstrap.execute('CREATE DATABASE grid_c8_isolated')
+    dsn=make_conninfo(base,dbname='grid_c8_isolated')
+    with psycopg.connect(dsn,autocommit=True,connect_timeout=10) as db:
+        have=db.execute("SELECT to_regclass('grid_private.schedules')").fetchone()[0]
+        if not have:
+            for name in ('anon','authenticated','service_role'):
+                if not db.execute('SELECT 1 FROM pg_roles WHERE rolname=%s',(name,)).fetchone():
+                    db.execute(f'CREATE ROLE {name} NOLOGIN NOSUPERUSER NOBYPASSRLS')
+            db.execute('CREATE SCHEMA auth')
+            db.execute('CREATE TABLE auth.users (id uuid PRIMARY KEY)')
+            db.execute((ROOT/'db/review/c6_grid_private_schema.sql').read_text(),prepare=False)
+            db.execute((ROOT/'db/c8/c8_isolated_policy_approval.sql').read_text(),prepare=False)
+    return {'dsn':dsn,'database':'grid_c8_isolated'}
 from scripts.run_c4_probes import crossed_multi_occurrence_fixture
 from veni_grid_integration.c4_flexible_feedback import propose_c4
 from veni_grid_contract.handoff_common import fingerprint
@@ -27,13 +61,13 @@ def real_c4():
     return request,result
 
 @pytest.fixture
-def c9_school(pg8_setup,real_c4):
+def c9_school(c9_pg_setup,real_c4):
     import psycopg
     request,result=real_c4
     org=str(uuid4());sid=str(uuid4());other_org=str(uuid4());other_sid=str(uuid4())
     people={k:str(uuid4()) for k in ('planner','checker','viewer','outsider','other','owner')}
     sessions={k:str(uuid4()) for k in people};active=set(sessions.values())
-    with psycopg.connect(pg8_setup['dsn']) as db:
+    with psycopg.connect(c9_pg_setup['dsn']) as db:
         db.cursor().executemany('INSERT INTO auth.users(id) VALUES(%s)',[(u,) for u in people.values()])
         db.execute('INSERT INTO grid_private.organisations(id,display_name) VALUES(%s,%s)',(org,'Imaginary School Alpha'))
         db.execute('INSERT INTO grid_private.organisations(id,display_name) VALUES(%s,%s)',(other_org,'Imaginary School Beta'))
@@ -77,11 +111,11 @@ def c9_school(pg8_setup,real_c4):
         schedule_uuid=other_sid,c4_source_organisation_id=request.current.source_ref.organisation_id,
         c4_source_schedule_id=request.current.source_ref.schedule_id)
     bridge=C9ServerBridge(identity_gate=gate,
-        trusted_db_connect=lambda:psycopg.connect(pg8_setup['dsn'],connect_timeout=8),
+        trusted_db_connect=lambda:psycopg.connect(c9_pg_setup['dsn'],connect_timeout=8),
         trusted_registrations={'trusted-school-options':reg,'wrong-school-options':reg_other})
     return dict(bridge=bridge,token=token,people=people,sessions=sessions,active=active,
                 request=request,result=result,org=org,sid=sid,other_org=other_org,
-                dsn=pg8_setup['dsn'],src=fingerprint(request.current.source),private=private)
+                dsn=c9_pg_setup['dsn'],src=fingerprint(request.current.source),private=private)
 
 
 def stage(c,who='planner',*,token=None,idem='c9-stage-reference-001',result=None,request=None,reason='Mathematically checked option revision proposal'):
