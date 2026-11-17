@@ -38,3 +38,4 @@ private/
 *.sqlite-shm
 /c6-output/
 /c7-output/
+/c8-output/
