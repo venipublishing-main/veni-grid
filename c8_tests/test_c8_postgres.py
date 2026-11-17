@@ -196,9 +196,22 @@ def test_revocation_blocks_even_exact_idempotency_replay(school):
 
 
 def test_invalid_proposal_integrity_hash_fails_closed(school):
+    # The existing C6 trigger already prevents altering stored proposal bytes.
+    # Seed a deliberately bad *new* fixture to exercise C8 hash checks too.
     with psycopg.connect(school['dsn']) as admin:
-        admin.execute('UPDATE grid_private.proposals SET payload_sha256=%s WHERE id=%s',('0'*64,school['proposal']))
-    denied(school,expected='C8_PROPOSAL_HASH_MISMATCH')
+        with pytest.raises(psycopg.errors.CheckViolation):
+            with admin.transaction():
+                admin.execute('UPDATE grid_private.proposals SET payload_sha256=%s WHERE id=%s',
+                              ('0'*64,school['proposal']))
+        bad_id=str(uuid4())
+        admin.execute('''INSERT INTO grid_private.proposals(
+          organisation_id,schedule_id,id,source_revision,source_sha256,
+          payload,payload_sha256,state,proposed_by)
+          VALUES(%s,%s,%s,1,%s,%s::jsonb,%s,'PENDING',%s)''',
+          (school['orgs']['a'],school['schedules']['a'],bad_id,
+           school['source_sha'],'{"bad_fixture":true}','0'*64,school['people']['planner_a']))
+    bad_fixture={**school,'bad_proposal':bad_id}
+    denied(bad_fixture,proposal='bad_proposal',expected='C8_PROPOSAL_HASH_MISMATCH')
 
 
 def test_valid_reviewer_cannot_approve_nonacademic_schedule(school):
