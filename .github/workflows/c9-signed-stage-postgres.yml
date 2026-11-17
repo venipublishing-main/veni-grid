@@ -1,0 +1,99 @@
+name: C9 signed identity + independently verified staging and PG approval
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  c9-bridge:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: grid_c7_isolated
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: disposable-ci-only
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres -d grid_c7_isolated"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      GRID_C7_PG_DSN: postgresql://postgres:disposable-ci-only@localhost:5432/grid_c7_isolated
+      GRID_C7_DISPOSABLE_ONLY: "YES"
+      GRID_C8_DISPOSABLE_ONLY: "YES"
+      GRID_C9_DISPOSABLE_ONLY: "YES"
+      PYTHONUNBUFFERED: "1"
+    steps:
+      - name: Checkout without saved credentials
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Install Python 3.13
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.13'
+      - name: Install pinned solver cryptographic and PostgreSQL test dependencies
+        run: |
+          python -m pip install -c requirements-solver-reviewed.txt -e '.[solver,test,auth,postgres-test]'
+          python -m pip check
+      - name: Recreate only invented scheduling fixtures
+        run: |
+          python -m scripts.prepare_workspace
+          python -m scripts.run_c2_probes
+          mkdir -p c9-output
+      - name: Run 704 real regression and synthetic trusted-bridge tests
+        run: >-
+          python -m pytest -q tests tests_solver quality_tests q2_tests q3_tests
+          o1_tests c2_tests c3_tests c4_tests c5_tests c6_tests c7_tests c8_tests c9_tests
+          --junitxml=c9-output/pytest-results.xml
+      - name: Assert 704 tests and no failures errors skips
+        run: |
+          python - <<'PY'
+          from xml.etree import ElementTree as ET
+          r=ET.parse('c9-output/pytest-results.xml').getroot()
+          counts={k:sum(int(t.attrib.get(k,0)) for t in r.iter('testsuite'))
+                  for k in ('tests','failures','errors','skipped')}
+          assert counts=={'tests':704,'failures':0,'errors':0,'skipped':0},counts
+          print('C9 complete conformance:',counts)
+          PY
+      - name: Re-execute C4 + genuine synthetic RSA JWT + membership and PostgreSQL approval
+        run: python -m scripts.run_c9_receipt
+      - name: Enforce safety and source-of-truth receipt bounds
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          r=json.loads(Path('c9-output/c9-verified-reference.json').read_text())
+          assert r['kind']=='C9_SYNTHETIC_CRYPTO_C4_POSTGRES_GATE'
+          assert r['signed_access_token']=='VERIFIED_OFFLINE_RSA_SIGNATURE'
+          assert r['school_membership']=='ACTUAL_DISPOSABLE_POSTGRES_LOOKUP'
+          assert r['independent_c4_review']=='PASSED'
+          assert r['compulsory_requests_preserved']==48 and r['section_count']==9
+          assert r['independently_validated_teaching_events']==18
+          assert r['staged_status']=='PENDING' and r['approved_status']=='APPROVED'
+          assert r['new_accepted_options_revision']==2 and r['published_options_revision'] is None
+          assert r['audit_stage_events']==1 and r['audit_approval_events']==1
+          assert r['current_live_auth']=='NOT_CONNECTED' and r['real_mfa_oracle']=='NOT_CONNECTED'
+          assert r['staging_database_migration']=='NOT_APPLIED'
+          assert r['external_publication']=='NOT_GRANTED'
+          assert r['actual_school_data']=='NONE'
+          print('Signed synthetic Veni session and validated option staging confirmed, without live claims')
+          PY
+      - name: Preserve synthetic proof without test database secrets or JWT
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: c9-trusted-stage-${{ github.run_id }}
+          path: |
+            c9-output/pytest-results.xml
+            c9-output/c9-verified-reference.json
+            c9-output/c9-verified-reference.html
+          if-no-files-found: warn
+          retention-days: 7

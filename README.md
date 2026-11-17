@@ -309,3 +309,30 @@ tests = **683**, but do not claim remote success until CI completes. Run with
 `pytest -q c8_tests` only inside the documented disposable environment.
 See [C8 exact boundary](docs/C8_ISOLATED_AUTHORITY_GATES.md) and
 [C8 test matrix](docs/C8_SECURITY_TEST_MATRIX.md).
+
+## C9 signed identity → verified proposal staging (review only)
+
+The new **C9 server-only reference** connects a *genuinely cryptographically
+verified synthetic* Veni-style JWT (via the existing C6 IdentityGate), current
+PostgreSQL school membership, and independent C4 O1/C2 validator to the C8
+private PostgreSQL options-approval function. Each organisation/schedule pair
+is resolved through a server-owned registry—not JWT user metadata, an email,
+or a browser-supplied school role. A different signed AAL2 reviewer is needed
+for approval. The 48-choice/nine-section/18-teaching-event synthetic C4 plan
+is checked **before** being staged and approved as an OPTIONS revision only.
+Approved is **not published**, and none of the other independent academic,
+invigilation, exam, duty, sport or room timetables is modified.
+
+**C9 is not an HTTP API or production identity service.** JWT keys/sessions,
+server membership, connection roles and PostgreSQL users are test-only. The
+GitHub service uses a disposable PG17 database and superuser connection
+that assumes restricted NOLOGIN roles, which is unsuitable as a production
+secret strategy. The cross-language C4/C8 fingerprint conventions still need
+an explicit versioned contract. No live Veni Account, Supabase migration,
+school staff/learner data, timetable publication, paid feature or deployment.
+
+C9 adds 21 tests (16 integrated signed-JWT/C4/PostgreSQL and five static)
+above the retained **683** tests = **704** expected. Do not claim remote
+verification until GitHub finishes. See the
+[C9 exact trust boundary](docs/C9_TRUSTED_BRIDGE.md) and
+[negative-test matrix](docs/C9_SECURITY_MATRIX.md).
