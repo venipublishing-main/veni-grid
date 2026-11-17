@@ -1,0 +1,48 @@
+name: C10 Veni Account transport-neutral offline preflight
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  c10-offline:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Checkout without saved credentials
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Configure Python 3.13
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.13'
+      - name: Install reviewed solver and verifier dependencies
+        run: |
+          python -m pip install -c requirements-solver-reviewed.txt -e '.[solver,test,auth]'
+          python -m pip check
+      - name: Run 29 invented C10 policy negative/positive cases
+        run: |
+          mkdir -p c10-output
+          python -m pytest -q c10_tests --junitxml=c10-output/pytest.xml
+      - name: Enforce exactly 29 C10 synthetic cases without skips
+        run: |
+          python - <<'PY'
+          from xml.etree import ElementTree as ET
+          r=ET.parse('c10-output/pytest.xml').getroot()
+          counts={k:sum(int(t.attrib.get(k,0)) for t in r.iter('testsuite'))
+                  for k in ('tests','failures','errors','skipped')}
+          assert counts=={'tests':29,'failures':0,'errors':0,'skipped':0},counts
+          print('C10 offline, transport-disabled-by-default policy:',counts)
+          PY
+      - name: Retain only disposable test counts, never credentials
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: c10-offline-policy-${{ github.run_id }}
+          path: c10-output/pytest.xml
+          if-no-files-found: warn
+          retention-days: 7
